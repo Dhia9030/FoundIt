@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
-import 'widgets/bottom_navbar.dart';
-import 'widgets/menu_drawer.dart';
-
+import 'home_screen.dart';
+import '../widgets/bottom_navbar.dart';
+import '../widgets/menu_drawer.dart';
+import 'package:provider/provider.dart';
+import '../models/theme_provider.dart';
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -30,7 +37,7 @@ class _HomePageState extends State<HomePage> {
 
   final List<Widget> _pages = [
     const Center(child: Text('Search Page', style: TextStyle(color: Colors.white))),
-    const Center(child: Text('Home Page', style: TextStyle(color: Colors.white))),
+    HomeScreen(), // Updated to reference HomeScreen
     const Center(child: Text('Profile Page', style: TextStyle(color: Colors.white))),
     const Center(child: Text('History Page', style: TextStyle(color: Colors.white))),
   ];
@@ -51,7 +58,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF131417),
+      backgroundColor: const Color(0xFF1B262C), // Changed background color to 1B262C
       body: Stack(
         children: [
           // Main Content
