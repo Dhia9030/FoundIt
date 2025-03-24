@@ -1,4 +1,4 @@
-# foundita
+# foundit
 
 A new Flutter project.
 
