@@ -1,39 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class ThemeProvider extends ChangeNotifier {
-  bool _darkMode = false;
-  
-  bool get darkMode => _darkMode;
-  
-  ThemeProvider() {
-    _loadThemePreference();
-  }
-  
-  Future<void> _loadThemePreference() async {
-    final prefs = await SharedPreferences.getInstance();
-    _darkMode = prefs.getBool('darkMode') ?? false;
+class ThemeProvider with ChangeNotifier {
+  bool _isDarkMode = false;
+
+  bool get isDarkMode => _isDarkMode;
+
+  ThemeData get themeData => _isDarkMode ? _darkTheme : _lightTheme;
+
+  void toggleDarkMode() {
+    _isDarkMode = !_isDarkMode;
     notifyListeners();
   }
-  
-  Future<void> toggleTheme(bool value) async {
-    _darkMode = value;
-    
-    // Save preference
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('darkMode', value);
-    
-    notifyListeners();
-  }
-  
-  ThemeData get themeData => _darkMode 
-    ? ThemeData.dark().copyWith(
-        primaryColor: Color(0xFF539DF3),
-        scaffoldBackgroundColor: Color(0xFF1B262C),
-      )
-    : ThemeData.light().copyWith(
-        primaryColor: Color(0xFF539DF3),
-        scaffoldBackgroundColor: Colors.white,
-      );
+
+  static final ThemeData _lightTheme = ThemeData(
+    primarySwatch: Colors.blue,
+    brightness: Brightness.light,
+    scaffoldBackgroundColor: Colors.white,
+    appBarTheme: const AppBarTheme(
+      color: Colors.white,
+      elevation: 0,
+      iconTheme: IconThemeData(color: Colors.black),
+    ),
+  );
+
+  static final ThemeData _darkTheme = ThemeData(
+    primarySwatch: Colors.blue,
+    brightness: Brightness.dark,
+    scaffoldBackgroundColor: const Color(0xFF1B262C),
+    appBarTheme: const AppBarTheme(
+      color: Color(0xFF1B262C),
+      elevation: 0,
+    ),
+  );
 }
-

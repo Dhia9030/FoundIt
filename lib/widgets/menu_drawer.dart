@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
+import '../models/theme_provider.dart';
 
 class MenuDrawer extends StatefulWidget {
   final bool isMenuOpen;
   final VoidCallback onMenuToggle;
-  final bool darkMode;
-  final ValueChanged<bool> onDarkModeChanged;
 
   const MenuDrawer({
     Key? key,
     required this.isMenuOpen,
     required this.onMenuToggle,
-    required this.darkMode,
-    required this.onDarkModeChanged,
   }) : super(key: key);
 
   @override
@@ -49,13 +47,13 @@ class _MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final rotation = Tween(begin: 0.0, end: 0.25).animate(
       CurvedAnimation(parent: _rotationController, curve: Curves.easeOut),
     );
 
     return Stack(
       children: [
-        // Slide-in Drawer
         AnimatedPositioned(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
@@ -64,14 +62,12 @@ class _MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateM
           child: Container(
             width: 280,
             height: MediaQuery.of(context).size.height,
-            color: const Color(0xFF1B262C),
+            color: themeProvider.isDarkMode ? const Color(0xFF1B262C) : Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 80), // Adjusted to start lower
-
-                // User Profile with Correct SVG Usage
+                const SizedBox(height: 80),
                 Row(
                   children: [
                     SvgPicture.asset(
@@ -80,39 +76,52 @@ class _MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateM
                       height: 40,
                     ),
                     const SizedBox(width: 15),
-                    const Text(
+                    Text(
                       'John Doe',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: themeProvider.isDarkMode ? Colors.blue : Colors.blue[800],
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'Montserrat', // Font applied here
+                        fontFamily: 'Montserrat',
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 40),
-
-                // Dark Mode
                 _buildMenuItem(
                   icon: 'sun.svg',
                   text: 'Dark Mode',
+                  textColor: themeProvider.isDarkMode ? Colors.white : Colors.black,
+                  iconColor: themeProvider.isDarkMode ? Colors.white : Colors.black,
                   trailing: Switch(
-                    value: widget.darkMode,
-                    onChanged: widget.onDarkModeChanged,
-                    activeColor: Color(0xFF81C784), // Lighter Green
+                    value: themeProvider.isDarkMode,
+                    onChanged: (value) => themeProvider.toggleDarkMode(),
+                    activeColor: const Color(0xFF3869F1),
                   ),
                 ),
-                const Divider(color: Colors.grey, height: 30),
-
-                // Other Menu Items
-                _buildMenuItem(icon: 'info-circle.svg', text: 'Account', onTap: () => print('Account Info')),
-                _buildMenuItem(icon: 'lock.svg', text: 'Password', onTap: () => print('Password')),
-                _buildMenuItem(icon: 'settings.svg', text: 'Settings', onTap: () => print('Settings')),
-
+                Divider(color: themeProvider.isDarkMode ? Colors.grey : Colors.grey[400], height: 30),
+                _buildMenuItem(
+                  icon: 'info-circle.svg',
+                  text: 'Account',
+                  textColor: themeProvider.isDarkMode ? Colors.white : Colors.black,
+                  iconColor: themeProvider.isDarkMode ? Colors.white : Colors.black,
+                  onTap: () => print('Account Info'),
+                ),
+                _buildMenuItem(
+                  icon: 'lock.svg',
+                  text: 'Password',
+                  textColor: themeProvider.isDarkMode ? Colors.white : Colors.black,
+                  iconColor: themeProvider.isDarkMode ? Colors.white : Colors.black,
+                  onTap: () => print('Password'),
+                ),
+                _buildMenuItem(
+                  icon: 'settings.svg',
+                  text: 'Settings',
+                  textColor: themeProvider.isDarkMode ? Colors.white : Colors.black,
+                  iconColor: themeProvider.isDarkMode ? Colors.white : Colors.black,
+                  onTap: () => print('Settings'),
+                ),
                 const SizedBox(height: 200),
-
-                // Logout
                 _buildMenuItem(
                   icon: 'logout.svg',
                   text: 'Logout',
@@ -124,10 +133,8 @@ class _MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateM
             ),
           ),
         ),
-
-        // Menu Button (Always Visible)
         Positioned(
-          top: 60, // Adjusted lower
+          top: 60,
           left: 20,
           child: GestureDetector(
             onTap: widget.onMenuToggle,
@@ -153,11 +160,18 @@ class _MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateM
   Widget _buildMenuItem({
     required String icon,
     required String text,
-    Color textColor = Colors.white,
-    Color iconColor = Colors.white,
+    Color? textColor,
+    Color? iconColor,
     Widget? trailing,
     VoidCallback? onTap,
   }) {
+    double iconWidth = 24.0;
+    double iconHeight = 24.0;
+
+    if (icon == 'sun.svg') {
+      iconWidth = 30.0;
+      iconHeight = 30.0;
+    }
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -166,17 +180,18 @@ class _MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateM
           children: [
             SvgPicture.asset(
               'assets/icons/$icon',
-              width: 24,
-              height: 24,
+              width: iconWidth,
+              height: iconHeight,
               color: iconColor,
             ),
             const SizedBox(width: 15),
             Text(
               text,
               style: TextStyle(
-                color: textColor,
-                fontSize: 16,
-                fontFamily: 'Montserrat', // Font applied here as well
+                  color: textColor,
+                  fontSize: 16,
+                  fontFamily: 'Montserrat',
+                  fontWeight: FontWeight.w900
               ),
             ),
             if (trailing != null) ...[const Spacer(), trailing]

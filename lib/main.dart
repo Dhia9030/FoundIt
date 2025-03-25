@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
-import '../widgets/bottom_navbar.dart';
-import '../widgets/menu_drawer.dart';
 import 'package:provider/provider.dart';
-import '../models/theme_provider.dart';
+import 'models/theme_provider.dart';
+import 'screens/home_screen.dart';
+import 'widgets/bottom_navbar.dart';
+import 'widgets/menu_drawer.dart';
+
 void main() {
   runApp(
     ChangeNotifierProvider(
       create: (context) => ThemeProvider(),
-      child: MyApp(),
+      child: const MyApp(),
     ),
   );
 }
@@ -20,12 +21,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: HomePage(),
+      theme: Provider.of<ThemeProvider>(context).themeData,
+      home: const HomePage(),
     );
   }
 }
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -33,13 +37,12 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
   bool _isMenuOpen = false;
-  bool _darkMode = false;
 
   final List<Widget> _pages = [
-    const Center(child: Text('Search Page', style: TextStyle(color: Colors.white))),
-    HomeScreen(), // Updated to reference HomeScreen
-    const Center(child: Text('Profile Page', style: TextStyle(color: Colors.white))),
-    const Center(child: Text('History Page', style: TextStyle(color: Colors.white))),
+    const Center(child: Text('Search Page')),
+    HomeScreen(),
+    const Center(child: Text('Profile Page')),
+    const Center(child: Text('History Page')),
   ];
 
   void _toggleMenu() {
@@ -58,28 +61,25 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1B262C), // Changed background color to 1B262C
       body: Stack(
         children: [
           // Main Content
           _pages[_currentIndex],
 
-          // Menu Overlay
+          // Menu Overlay (only visible when menu is open)
           if (_isMenuOpen)
             GestureDetector(
               onTap: _toggleMenu,
               behavior: HitTestBehavior.opaque,
-              child: Container(color: Colors.black.withOpacity(0.5)),
+              child: Container(
+                color: Colors.black.withOpacity(0.5),
+              ),
             ),
 
-          // Menu Drawer Component
+          // Menu Drawer (always in the tree but positioned off-screen when closed)
           MenuDrawer(
             isMenuOpen: _isMenuOpen,
             onMenuToggle: _toggleMenu,
-            darkMode: _darkMode,
-            onDarkModeChanged: (value) {
-              setState(() => _darkMode = value);
-            },
           ),
         ],
       ),

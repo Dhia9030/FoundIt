@@ -37,7 +37,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   font_awesome_flutter: 10.8.0
   flutter_svg: ^2.0.7
-
+  provider: ^6.0.5
+  shared_preferences: ^2.2.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -63,7 +64,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/icons/          # For SVG/PNG icons
-    #- assets/images/         # For images
+    - assets/images/         # For images
     - assets/fonts/Montserrat-VariableFont_wght.ttf
 
 
@@ -78,13 +79,11 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
+  fonts:
+    - family: Montserrat
+      fonts:
+        - asset: assets/fonts/Montserrat-VariableFont_wght.ttf
+          weight: 900
   #     fonts:
   #       - asset: fonts/TrajanPro.ttf
   #       - asset: fonts/TrajanPro_Bold.ttf
