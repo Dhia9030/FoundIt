@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../models/mock_notification.dart';
+import '../providers/conversation_provider.dart';
+import '../screens/chat_screen.dart';
+import '../models/conversation.dart';// Ensure this import is correct
 
 class NotificationCard extends StatelessWidget {
   final MockNotification notification;
@@ -15,9 +19,9 @@ class NotificationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isFoundItem = notification.type == 'FOUND_YOUR_ITEM';
-    final Color cardColor = isFoundItem 
-        ? const Color(0xFFEDFFE7).withOpacity(0.7)
-        : const Color(0xFFEBE7FF).withOpacity(0.7);
+    final Color cardColor = isFoundItem
+        ? const Color(0xFFEDFFE7).withOpacity(0.9)
+        : const Color(0xFFEBE7FF).withOpacity(0.9);
     final Color checkColor = isFoundItem
         ? const Color(0xFF0BD62A)
         : const Color(0xFF5233EB);
@@ -38,7 +42,50 @@ class NotificationCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: onTap,
+          onTap: () async {
+            try {
+              final conversationProvider = Provider.of<ConversationProvider>(
+                context,
+                listen: false,
+              );
+
+              // Create a new conversation or get existing one
+              final conversation = Conversation(
+                id: 'conv_${notification.id}',
+                notificationId: notification.id,
+                participant1Id: 'current_user_id', // Replace with actual user ID
+                participant2Id: notification.senderId,
+                itemId: notification.itemId,
+                messages: [
+                  Message(
+                    id: '1',
+                    senderId: notification.senderId,
+                    content: isFoundItem
+                        ? "Hello! I think I found your item"
+                        : "Hello! I'm looking for a similar item",
+                    timestamp: DateTime.now(),
+                  ),
+                ],
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+              );
+
+              // Navigate to chat screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChatScreen(
+                    conversationId: conversation.id,
+                    notificationId: notification.id,
+                  ),
+                ),
+              );
+            } catch (e) {
+              print('Error navigating to chat: $e');
+            }
+
+            onTap();
+          },
           borderRadius: BorderRadius.circular(20),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -47,13 +94,14 @@ class NotificationCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    // Profile image
+                    // Profile image with error handling
                     CircleAvatar(
                       radius: 30,
-                      backgroundImage: AssetImage('assets/images/profile.jpg'),
+                      backgroundImage: AssetImage('assets/images/profile.png'),
+
                     ),
                     const SizedBox(width: 12),
-                    
+
                     // Notification text
                     Expanded(
                       child: Column(
@@ -77,7 +125,7 @@ class NotificationCard extends StatelessWidget {
                                 ),
                                 TextSpan(
                                   text: isFoundItem ? "Jacket" : "Mobile Phone",
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                  style: const TextStyle(fontWeight: FontWeight.w900),
                                 ),
                               ],
                             ),
@@ -85,7 +133,7 @@ class NotificationCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    
+
                     // Check icon
                     Container(
                       width: 50,
@@ -102,9 +150,9 @@ class NotificationCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 8),
-                
+
                 // Chat prompt
                 Center(
                   child: Text(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
-import '../models/theme_provider.dart';
+import '../providers/theme_provider.dart';
 
 class MenuDrawer extends StatefulWidget {
   final bool isMenuOpen;
