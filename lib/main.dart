@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:foundita/widgets/Auth_screen.dart';
+import 'package:foundita/widgets/found_item_form.dart';
 import 'package:provider/provider.dart';
 import 'models/theme_provider.dart';
 import 'screens/home_screen.dart';
 import 'widgets/bottom_navbar.dart';
 import 'widgets/menu_drawer.dart';
+import 'widgets/Auth_screen.dart';
+
 
 void main() {
   runApp(
@@ -41,8 +45,8 @@ class _HomePageState extends State<HomePage> {
   final List<Widget> _pages = [
     const Center(child: Text('Search Page')),
     HomeScreen(),
-    const Center(child: Text('Profile Page')),
     const Center(child: Text('History Page')),
+    const Center(child: Text('Account Page')),
   ];
 
   void _toggleMenu() {

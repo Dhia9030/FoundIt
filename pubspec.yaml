@@ -28,6 +28,9 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  google_maps_flutter: ^2.2.3
+  flutter_dotenv: ^5.0.2
+  intl: ^0.18.1  # Add this line
   flutter:
     sdk: flutter
 
