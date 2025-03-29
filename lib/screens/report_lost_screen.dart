@@ -6,7 +6,6 @@ import '../providers/theme_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/menu_drawer.dart';
 import '../widgets/bottom_navbar.dart';
-import '../main.dart';
 
 class DescribeItemScreen extends StatefulWidget {
   const DescribeItemScreen({Key? key}) : super(key: key);

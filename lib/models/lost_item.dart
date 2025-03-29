@@ -1,5 +1,7 @@
 
 
+import 'package:foundita/models/item.dart';
+
 class LostItem extends Item {
   final DateTime lostDate;
 

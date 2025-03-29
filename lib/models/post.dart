@@ -10,7 +10,7 @@ class Post {
   final String itemId; // Référence à Item
 
   Post({
-    this.postId,
+    required this.postId,
     required this.date,
     required this.status,
     this.isSpam = false,

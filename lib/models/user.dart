@@ -1,3 +1,5 @@
+import 'package:foundita/models/account_holder.dart';
+
 class User extends AccountHolder {
   final bool isBanned;
   final String phoneNumber;

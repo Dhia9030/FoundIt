@@ -1,5 +1,7 @@
 
 
+import 'package:foundita/models/account_holder.dart';
+
 class Administrator extends AccountHolder {
   final List<String>? moderatedPostIds; // Références aux posts modérés
 

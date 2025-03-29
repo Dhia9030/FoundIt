@@ -5,7 +5,7 @@ enum AuthMethod {
 }
 
 class AccountHolder {
-  final String userId;
+  final String? userId;
   final String name;
   final String email;
   final AuthMethod authMethod;
