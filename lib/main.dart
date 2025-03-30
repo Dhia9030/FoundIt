@@ -1,4 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:foundita/firebase_options.dart';
+import 'package:foundita/screens/register_screen.dart';
 import 'package:provider/provider.dart';
 import 'providers/theme_provider.dart';
 import 'screens/home_screen.dart';
@@ -8,14 +14,29 @@ import 'widgets/bottom_navbar.dart';
 import 'widgets/menu_drawer.dart';
 import 'models/item_provider.dart';
 import 'providers/conversation_provider.dart';
+import 'providers/registerprovider.dart';
+import 'services/register_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+ await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Connect to Firebase Emulators (for local testing)
+  if (kDebugMode) {
+    await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
+    FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
+  }
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => ThemeProvider()),
         ChangeNotifierProvider(create: (context) => ItemProvider()),
         ChangeNotifierProvider(create: (context) => ConversationProvider()),
+        ChangeNotifierProvider(
+          create: (context) => RegisterProvider(regService: RegisterService()),
+        ),
       ],
       child: const MyApp(),
     ),
@@ -38,6 +59,8 @@ class MyApp extends StatelessWidget {
         '/notifications': (context) => const HomePage(initialTabIndex: 2),
         '/profile': (context) => const HomePage(initialTabIndex: 3),
         '/report-lost': (context) => const DescribeItemScreen(),
+        '/register': (context) => RegistrationScreen(),
+        
       },
     );
   }
@@ -60,7 +83,8 @@ class _HomePageState extends State<HomePage> {
     const Center(child: Text('Search Page')), // Index 0: Search
      HomeScreen(),                       // Index 1: Home
     const NotificationsScreen(),              // Index 2: Notifications
-    const Center(child: Text('Profile Page')), // Index 3: Profile
+    const Center(child: Text('Profile Page')),
+    const Center(child: Text('Register')) // Index 3: Profile
   ];
 
   @override
@@ -106,6 +130,9 @@ class _HomePageState extends State<HomePage> {
         break;
       case 3:
         Navigator.pushNamed(context, '/profile');
+        break;
+      case 4:
+      Navigator.pushNamed(context, '/register');
         break;
     }
   }
