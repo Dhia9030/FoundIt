@@ -1,12 +1,10 @@
-
-
 import 'package:foundita/models/item.dart';
 
 class LostItem extends Item {
   final DateTime lostDate;
 
   LostItem({
-   required String itemId,
+    required String itemId,
     required String itemName,
     required Category type,
     required String description,
@@ -46,4 +44,29 @@ class LostItem extends Item {
         locationId: json['locationId'],
         lostDate: DateTime.parse(json['lostDate']),
       );
+  LostItem copyWith({
+    String? itemId,
+    String? itemName,
+    Category? type,
+    String? description,
+    String? color,
+    DateTime? date,
+    String? photo,
+    bool? isFound,
+    String? locationId,
+    DateTime? lostDate,
+  }) {
+    return LostItem(
+      itemId: itemId ?? this.itemId,
+      itemName: itemName ?? this.itemName,
+      type: type ?? this.type,
+      description: description ?? this.description,
+      color: color ?? this.color,
+      date: date ?? this.date,
+      photo: photo ?? this.photo,
+      isFound: isFound ?? this.isFound,
+      locationId: locationId ?? this.locationId,
+      lostDate: lostDate ?? this.lostDate,
+    );
+  }
 }
