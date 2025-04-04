@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:foundita/models/lost_item.dart';
 import 'package:foundita/widgets/Auth_screen.dart';
 import 'package:foundita/widgets/found_item_form.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +8,8 @@ import 'screens/home_screen.dart';
 import 'widgets/bottom_navbar.dart';
 import 'widgets/menu_drawer.dart';
 import 'widgets/Auth_screen.dart';
+// import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 
 
 void main() {
@@ -17,6 +20,16 @@ void main() {
     ),
   );
 }
+
+// List<LostItem> lostItems = [
+//   LostItem(
+//     title: "Nike Hoodie",
+//     description: "Nike Throwback Pullover Hoodie found in downtown Miami",
+//     location: const LatLng(25.7617, -80.1918),
+//     imageUrl: 'https://example.com/hoodie.jpg',
+//   ),
+//   // Add more items
+// ];
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -43,7 +56,8 @@ class _HomePageState extends State<HomePage> {
   bool _isMenuOpen = false;
 
   final List<Widget> _pages = [
-    const Center(child: Text('Search Page')),
+    // const Center(child: Text('Search Page')),
+    AuthScreen(title: 'test title', footerActionText: 'footer action text',footerText: 'text',formContent: const SignInForm(),onFooterAction: (){},),
     HomeScreen(),
     const Center(child: Text('History Page')),
     const Center(child: Text('Account Page')),

@@ -1,0 +1,2 @@
+C:/Users/youne/OneDrive/Desktop/FoundIt/android/app/.cxx/Debug/b5y2k5i2/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/youne/OneDrive/Desktop/FoundIt/android/app/.cxx/Debug/b5y2k5i2/x86_64/CMakeFiles/rebuild_cache.dir
