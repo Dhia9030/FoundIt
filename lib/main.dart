@@ -1,35 +1,53 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:foundita/models/lost_item.dart';
-import 'package:foundita/widgets/Auth_screen.dart';
-import 'package:foundita/widgets/found_item_form.dart';
+import 'package:foundita/firebase_options.dart';
+import 'package:foundita/screens/register_screen.dart';
+import 'package:foundita/screens/login_screen.dart';
 import 'package:provider/provider.dart';
-import 'models/theme_provider.dart';
+import 'providers/theme_provider.dart';
 import 'screens/home_screen.dart';
+import 'screens/notifications_screen.dart';
+import 'screens/report_lost_screen.dart';
+import 'screens/login_screen.dart';
 import 'widgets/bottom_navbar.dart';
 import 'widgets/menu_drawer.dart';
-import 'widgets/Auth_screen.dart';
-// import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'models/item_provider.dart';
+import 'providers/conversation_provider.dart';
+import 'providers/registerprovider.dart';
+import 'providers/login_provider.dart';
+import 'services/register_service.dart';
+import 'services/login_service.dart';
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+ await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
-
-
-void main() {
+  // Connect to Firebase Emulators (for local testing)
+  if (kDebugMode) {
+    await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
+    FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
+  }
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => ThemeProvider()),
+        ChangeNotifierProvider(create: (context) => ItemProvider()),
+        ChangeNotifierProvider(create: (context) => ConversationProvider()),
+        ChangeNotifierProvider(
+          create: (context) => RegisterProvider(regService: RegisterService()),
+        ),
+          ChangeNotifierProvider(
+      create: (context) => LoginProvider(loginService: LoginService()),
+    ),
+      ],
       child: const MyApp(),
     ),
   );
 }
-
-// List<LostItem> lostItems = [
-//   LostItem(
-//     title: "Nike Hoodie",
-//     description: "Nike Throwback Pullover Hoodie found in downtown Miami",
-//     location: const LatLng(25.7617, -80.1918),
-//     imageUrl: 'https://example.com/hoodie.jpg',
-//   ),
-//   // Add more items
-// ];
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -40,40 +58,91 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: Provider.of<ThemeProvider>(context).themeData,
       home: const HomePage(),
+      routes: {
+
+        '/home': (context) => const HomePage(initialTabIndex: 1),
+        '/search': (context) => const HomePage(initialTabIndex: 0),
+        '/notifications': (context) => const HomePage(initialTabIndex: 2),
+        '/profile': (context) => const HomePage(initialTabIndex: 3),
+        '/report-lost': (context) => const DescribeItemScreen(),
+        '/register': (context) => RegistrationScreen(),
+        '/login': (context) => LoginScreen (),
+        
+      },
     );
   }
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final int? initialTabIndex;
+
+  const HomePage({super.key, this.initialTabIndex});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  int _currentIndex = 0;
+  late int _currentIndex;
   bool _isMenuOpen = false;
 
   final List<Widget> _pages = [
-    // const Center(child: Text('Search Page')),
-    AuthScreen(title: 'test title', footerActionText: 'footer action text',footerText: 'text',formContent: const SignInForm(),onFooterAction: (){},),
-    HomeScreen(),
-    const Center(child: Text('History Page')),
-    const Center(child: Text('Account Page')),
+    const Center(child: Text('Search Page')), // Index 0: Search
+     HomeScreen(),                       // Index 1: Home
+    const NotificationsScreen(),              // Index 2: Notifications
+    const Center(child: Text('Profile Page')),
+    const Center(child: Text('Register')), // Index 3: Profile
+     const Center(child: Text('Login')) 
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialTabIndex ?? 1;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Handle route arguments if any
+    final routeArgs = ModalRoute.of(context)?.settings.arguments;
+    if (routeArgs is int) {
+      setState(() {
+        _currentIndex = routeArgs;
+      });
+    }
+  }
+
   void _toggleMenu() {
-    setState(() {
-      _isMenuOpen = !_isMenuOpen;
-    });
+    setState(() => _isMenuOpen = !_isMenuOpen);
   }
 
   void _handleNavTap(int index) {
+    if (index == _currentIndex) return;
+
     setState(() {
       _currentIndex = index;
       if (_isMenuOpen) _toggleMenu();
     });
+
+    // Navigate to the corresponding route
+    switch (index) {
+      case 0:
+        Navigator.pushNamed(context, '/search');
+        break;
+      case 1:
+        Navigator.pushNamed(context, '/home');
+        break;
+      case 2:
+        Navigator.pushNamed(context, '/notifications');
+        break;
+      case 3:
+        Navigator.pushNamed(context, '/profile');
+        break;
+      case 4:
+      Navigator.pushNamed(context, '/register');
+        break;
+    }
   }
 
   @override
@@ -81,20 +150,13 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: Stack(
         children: [
-          // Main Content
           _pages[_currentIndex],
-
-          // Menu Overlay (only visible when menu is open)
           if (_isMenuOpen)
             GestureDetector(
               onTap: _toggleMenu,
               behavior: HitTestBehavior.opaque,
-              child: Container(
-                color: Colors.black.withOpacity(0.5),
-              ),
+              child: Container(color: Colors.black.withOpacity(0.5)),
             ),
-
-          // Menu Drawer (always in the tree but positioned off-screen when closed)
           MenuDrawer(
             isMenuOpen: _isMenuOpen,
             onMenuToggle: _toggleMenu,

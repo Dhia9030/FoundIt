@@ -1,10 +1,12 @@
+
+
 import 'package:foundita/models/item.dart';
 
-class LostItem extends Item {
-  final DateTime lostDate;
+class FoundItem extends Item {
+  final DateTime foundDate;
 
-  LostItem({
-    required String itemId,
+  FoundItem({
+   required String itemId,
     required String itemName,
     required Category type,
     required String description,
@@ -13,7 +15,7 @@ class LostItem extends Item {
     required String photo,
     bool isFound = false,
     required String locationId,
-    required this.lostDate,
+    required this.foundDate,
   }) : super(
           itemId: itemId,
           itemName: itemName,
@@ -29,10 +31,10 @@ class LostItem extends Item {
   @override
   Map<String, dynamic> toJson() => {
         ...super.toJson(),
-        'lostDate': lostDate.toIso8601String(),
+        'foundDate': foundDate.toIso8601String(),
       };
 
-  factory LostItem.fromJson(Map<String, dynamic> json) => LostItem(
+  factory FoundItem.fromJson(Map<String, dynamic> json) => FoundItem(
         itemId: json['itemId'],
         itemName: json['itemName'],
         type: Category.values.firstWhere((e) => e.name == json['type']),
@@ -42,31 +44,6 @@ class LostItem extends Item {
         photo: json['photo'],
         isFound: json['isFound'] ?? false,
         locationId: json['locationId'],
-        lostDate: DateTime.parse(json['lostDate']),
+        foundDate: DateTime.parse(json['foundDate']),
       );
-  LostItem copyWith({
-    String? itemId,
-    String? itemName,
-    Category? type,
-    String? description,
-    String? color,
-    DateTime? date,
-    String? photo,
-    bool? isFound,
-    String? locationId,
-    DateTime? lostDate,
-  }) {
-    return LostItem(
-      itemId: itemId ?? this.itemId,
-      itemName: itemName ?? this.itemName,
-      type: type ?? this.type,
-      description: description ?? this.description,
-      color: color ?? this.color,
-      date: date ?? this.date,
-      photo: photo ?? this.photo,
-      isFound: isFound ?? this.isFound,
-      locationId: locationId ?? this.locationId,
-      lostDate: lostDate ?? this.lostDate,
-    );
-  }
 }
