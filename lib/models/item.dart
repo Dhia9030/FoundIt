@@ -1,9 +1,4 @@
-enum Category {
-  electronics,
-  clothing,
-  documents,
-  other,
-}
+enum Category { electronics, clothing, documents, other, }
 
 class Item {
   final String itemId;
@@ -15,6 +10,7 @@ class Item {
   final String photo;
   final bool isFound;
   final String locationId; // Référence à Location
+  final String userId; // Nouveau champ ajouté
 
   Item({
     required this.itemId,
@@ -26,6 +22,7 @@ class Item {
     required this.photo,
     this.isFound = false,
     required this.locationId,
+    required this.userId, // Paramètre ajouté comme requis
   });
 
   Map<String, dynamic> toJson() => {
@@ -38,6 +35,7 @@ class Item {
         'photo': photo,
         'isFound': isFound,
         'locationId': locationId,
+        'userId': userId, // Ajout dans la sérialisation
       };
 
   factory Item.fromJson(Map<String, dynamic> json) => Item(
@@ -50,5 +48,6 @@ class Item {
         photo: json['photo'],
         isFound: json['isFound'] ?? false,
         locationId: json['locationId'],
+        userId: json['userId'], // Récupération depuis le JSON
       );
 }
