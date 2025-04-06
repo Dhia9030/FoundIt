@@ -2,7 +2,7 @@ import 'package:foundita/models/item.dart';
 
 class LostItem extends Item {
   final DateTime lostDate;
-
+  
   LostItem({
     required String itemId,
     required String itemName,
@@ -13,25 +13,27 @@ class LostItem extends Item {
     required String photo,
     bool isFound = false,
     required String locationId,
+    required String userId, // Added userId parameter
     required this.lostDate,
   }) : super(
-          itemId: itemId,
-          itemName: itemName,
-          type: type,
-          description: description,
-          color: color,
-          date: date,
-          photo: photo,
-          isFound: isFound,
-          locationId: locationId,
-        );
-
+        itemId: itemId,
+        itemName: itemName,
+        type: type,
+        description: description,
+        color: color,
+        date: date,
+        photo: photo,
+        isFound: isFound,
+        locationId: locationId,
+        userId: userId, // Pass userId to super constructor
+      );
+  
   @override
   Map<String, dynamic> toJson() => {
         ...super.toJson(),
         'lostDate': lostDate.toIso8601String(),
       };
-
+  
   factory LostItem.fromJson(Map<String, dynamic> json) => LostItem(
         itemId: json['itemId'],
         itemName: json['itemName'],
@@ -42,8 +44,10 @@ class LostItem extends Item {
         photo: json['photo'],
         isFound: json['isFound'] ?? false,
         locationId: json['locationId'],
+        userId: json['userId'], // Extract userId from JSON
         lostDate: DateTime.parse(json['lostDate']),
       );
+
   LostItem copyWith({
     String? itemId,
     String? itemName,
@@ -54,6 +58,7 @@ class LostItem extends Item {
     String? photo,
     bool? isFound,
     String? locationId,
+    String? userId, // Added userId parameter
     DateTime? lostDate,
   }) {
     return LostItem(
@@ -66,6 +71,7 @@ class LostItem extends Item {
       photo: photo ?? this.photo,
       isFound: isFound ?? this.isFound,
       locationId: locationId ?? this.locationId,
+      userId: userId ?? this.userId, // Handle userId in copyWith
       lostDate: lostDate ?? this.lostDate,
     );
   }
