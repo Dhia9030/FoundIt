@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:foundita/firebase_options.dart';
 import 'package:foundita/screens/register_screen.dart';
 import 'package:foundita/screens/login_screen.dart';
+import 'package:foundita/services/lost_item_service.dart';
+import 'package:foundita/services/usermanagement_service.dart';
 import 'package:provider/provider.dart';
 import 'providers/theme_provider.dart';
 import 'screens/home_screen.dart';
@@ -20,9 +22,14 @@ import 'providers/registerprovider.dart';
 import 'providers/login_provider.dart';
 import 'services/register_service.dart';
 import 'services/login_service.dart';
+import 'screens/report_lost_test.dart';
+import 'providers/lost_item_provider.dart';
+import "screens/usermanagement_screen.dart";
+import "providers/usermanagement_provider.dart";
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
- await Firebase.initializeApp(
+  await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
@@ -40,9 +47,11 @@ void main() async {
         ChangeNotifierProvider(
           create: (context) => RegisterProvider(regService: RegisterService()),
         ),
-          ChangeNotifierProvider(
-      create: (context) => LoginProvider(loginService: LoginService()),
-    ),
+        ChangeNotifierProvider(
+          create: (context) => LoginProvider(loginService: LoginService()),
+        ),
+        ChangeNotifierProvider(create: (context) => LostItemProvider(lostItemService: LostItemService())),
+      ChangeNotifierProvider(create: (context) => UserManagementProvider(userManagementService:UserManagementService())),
       ],
       child: const MyApp(),
     ),
@@ -59,15 +68,15 @@ class MyApp extends StatelessWidget {
       theme: Provider.of<ThemeProvider>(context).themeData,
       home: const HomePage(),
       routes: {
-
         '/home': (context) => const HomePage(initialTabIndex: 1),
         '/search': (context) => const HomePage(initialTabIndex: 0),
         '/notifications': (context) => const HomePage(initialTabIndex: 2),
         '/profile': (context) => const HomePage(initialTabIndex: 3),
         '/report-lost': (context) => const DescribeItemScreen(),
         '/register': (context) => RegistrationScreen(),
-        '/login': (context) => LoginScreen (),
-        
+        '/login': (context) => LoginScreen(),
+        '/report-lost-test': (context) => const ReportLostItemScreen(),
+        '/user-management': (context) => const UserManagementScreen(),
       },
     );
   }
@@ -88,11 +97,11 @@ class _HomePageState extends State<HomePage> {
 
   final List<Widget> _pages = [
     const Center(child: Text('Search Page')), // Index 0: Search
-     HomeScreen(),                       // Index 1: Home
-    const NotificationsScreen(),              // Index 2: Notifications
+    HomeScreen(), // Index 1: Home
+    const NotificationsScreen(), // Index 2: Notifications
     const Center(child: Text('Profile Page')),
     const Center(child: Text('Register')), // Index 3: Profile
-     const Center(child: Text('Login')) 
+    const Center(child: Text('Login'))
   ];
 
   @override
@@ -140,7 +149,7 @@ class _HomePageState extends State<HomePage> {
         Navigator.pushNamed(context, '/profile');
         break;
       case 4:
-      Navigator.pushNamed(context, '/register');
+        Navigator.pushNamed(context, '/register');
         break;
     }
   }

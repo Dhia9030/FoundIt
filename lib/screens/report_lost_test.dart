@@ -1,5 +1,6 @@
 //Just a page I used to test whether the lost item form works
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -7,6 +8,8 @@ import 'package:foundita/models/item.dart';
 import 'package:foundita/providers/lost_item_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:foundita/models/lost_item.dart';
+
 
 class ReportLostItemScreen extends StatefulWidget {
   const ReportLostItemScreen({Key? key}) : super(key: key);
@@ -63,6 +66,7 @@ class _ReportLostItemScreenState extends State<ReportLostItemScreen> {
     try {
       await Provider.of<LostItemProvider>(context, listen: false)
           .reportLostItem(
+        userId: FirebaseAuth.instance.currentUser!.uid, 
         itemName: _nameController.text,
         type: _selectedCategory,
         description: _descriptionController.text,

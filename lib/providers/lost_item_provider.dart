@@ -22,6 +22,7 @@ class LostItemProvider with ChangeNotifier {
 
   /// Reports a lost item and updates state
   Future<void> reportLostItem({
+    required String userId,
     required String itemName,
     required Category type,
     required String description,
@@ -42,6 +43,7 @@ class LostItemProvider with ChangeNotifier {
       }
 
       await _lostItemService.reportLostItem(
+        
         itemName: itemName,
         type: type,
         description: description,
@@ -49,7 +51,8 @@ class LostItemProvider with ChangeNotifier {
         date: date,
         imageFile: image,
         locationId: locationId,
-        lostDate: lostDate,
+        lostDate: lostDate, 
+        userId: '',
       );
 
       // Refresh the list after reporting
