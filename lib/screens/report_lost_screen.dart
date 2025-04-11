@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../providers/theme_provider.dart';
+import '../providers/lost_item_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/menu_drawer.dart';
 import '../widgets/bottom_navbar.dart';

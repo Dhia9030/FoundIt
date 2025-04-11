@@ -22,7 +22,7 @@ class LostItemService {
     required DateTime date,
     required File? imageFile,
     required String locationId,
-    required DateTime lostDate,
+    required DateTime lostDate, required String userId,
   }) async {
     try {
       // 1. Upload image if provided
@@ -33,6 +33,7 @@ class LostItemService {
 
       // 2. Create a new LostItem
       final newItem = LostItem(
+        userId: '', // Will be set by Firestore
         itemId: '', // Will be set by Firestore
         itemName: itemName,
         type: type,
