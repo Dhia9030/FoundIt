@@ -27,8 +27,14 @@ class LoginService {
           await _firestore.collection('administrators').doc(userId).get();
 
       if (userDoc.exists) {
-        return User.fromJson(userDoc.data() as Map<String, dynamic>);
+        final userData = userDoc.data() as Map<String, dynamic>;
+        if (userData['isBanned'] == true) {
+          await _firebaseAuth.signOut();
+          throw Exception('Votre compte a été suspendu. Contactez le support.');
+        }
+        return User.fromJson(userData);
       } else if (adminDoc.exists) {
+        // Pas de vérification de ban pour les administrateurs
         return Administrator.fromJson(adminDoc.data() as Map<String, dynamic>);
       } else {
         throw Exception('Utilisateur non trouvé dans les collections');
@@ -52,8 +58,14 @@ class LoginService {
             await _firestore.collection('administrators').doc(userId).get();
 
         if (userDoc.exists) {
-          return User.fromJson(userDoc.data() as Map<String, dynamic>);
+          final userData = userDoc.data() as Map<String, dynamic>;
+          if (userData['isBanned'] == true) {
+            await _firebaseAuth.signOut();
+            throw Exception('Votre compte a été suspendu. Contactez le support.');
+          }
+          return User.fromJson(userData);
         } else if (adminDoc.exists) {
+          // Pas de vérification de ban pour les administrateurs
           return Administrator.fromJson(adminDoc.data() as Map<String, dynamic>);
         } else {
           throw Exception('Utilisateur non trouvé dans les collections');
@@ -79,8 +91,14 @@ class LoginService {
             await _firestore.collection('administrators').doc(userId).get();
 
         if (userDoc.exists) {
-          return User.fromJson(userDoc.data() as Map<String, dynamic>);
+          final userData = userDoc.data() as Map<String, dynamic>;
+          if (userData['isBanned'] == true) {
+            await _firebaseAuth.signOut();
+            throw Exception('Votre compte a été suspendu. Contactez le support.');
+          }
+          return User.fromJson(userData);
         } else if (adminDoc.exists) {
+          // Pas de vérification de ban pour les administrateurs
           return Administrator.fromJson(adminDoc.data() as Map<String, dynamic>);
         } else {
           throw Exception('Utilisateur non trouvé dans les collections');

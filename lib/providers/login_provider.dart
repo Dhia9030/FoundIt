@@ -23,76 +23,60 @@ class LoginProvider with ChangeNotifier {
     required String password,
   }) async {
     try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
-
+      _setLoading(true);
       _currentAccountHolder = await _loginService.loginWithEmailAndPassword(
         email: email,
         password: password,
       );
     } catch (e) {
-      _error = e.toString();
+      _handleError(e);
       rethrow;
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
   Future<void> loginWithGoogle() async {
     try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
-
+      _setLoading(true);
       _currentAccountHolder = await _loginService.loginWithGoogle();
     } catch (e) {
-      _error = e.toString();
+      _handleError(e);
       rethrow;
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
   Future<void> loginWithFacebook() async {
     try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
-
+      _setLoading(true);
       _currentAccountHolder = await _loginService.loginWithFacebook();
     } catch (e) {
-      _error = e.toString();
+      _handleError(e);
       rethrow;
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
   Future<void> logout() async {
     try {
-      _isLoading = true;
-      notifyListeners();
-
+      _setLoading(true);
       await _loginService.logout();
       _currentAccountHolder = null;
     } catch (e) {
-      _error = e.toString();
+      _handleError(e);
       rethrow;
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
   Future<void> fetchCurrentAccountHolder() async {
     try {
-      _isLoading = true;
-      notifyListeners();
-
+      _setLoading(true);
+      
       final auth.FirebaseAuth _firebaseAuth = auth.FirebaseAuth.instance;
       final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -106,17 +90,32 @@ class LoginProvider with ChangeNotifier {
             await _firestore.collection('administrators').doc(userId).get();
 
         if (userDoc.exists) {
-          _currentAccountHolder = User.fromJson(userDoc.data() as Map<String, dynamic>);
+          final userData = userDoc.data() as Map<String, dynamic>;
+          if (userData['isBanned'] == true) {
+            await _firebaseAuth.signOut();
+            throw Exception('Votre compte a été suspendu. Contactez le support.');
+          }
+          _currentAccountHolder = User.fromJson(userData);
         } else if (adminDoc.exists) {
+          // Pas de vérification de ban pour les administrateurs
           _currentAccountHolder = Administrator.fromJson(adminDoc.data() as Map<String, dynamic>);
         }
       }
     } catch (e) {
-      _error = e.toString();
+      _handleError(e);
       rethrow;
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
+  }
+
+  void _setLoading(bool loading) {
+    _isLoading = loading;
+    notifyListeners();
+  }
+
+  void _handleError(dynamic e) {
+    _error = e.toString();
+    notifyListeners();
   }
 }

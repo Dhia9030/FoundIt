@@ -12,14 +12,17 @@ import 'screens/home_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/report_lost_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/usermanagement_screen.dart';
 import 'widgets/bottom_navbar.dart';
 import 'widgets/menu_drawer.dart';
 import 'models/item_provider.dart';
 import 'providers/conversation_provider.dart';
 import 'providers/registerprovider.dart';
 import 'providers/login_provider.dart';
+import 'providers/usermanagement_provider.dart';
 import 'services/register_service.dart';
 import 'services/login_service.dart';
+import 'services/usermanagement_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
  await Firebase.initializeApp(
@@ -43,6 +46,12 @@ void main() async {
           ChangeNotifierProvider(
       create: (context) => LoginProvider(loginService: LoginService()),
     ),
+     ChangeNotifierProvider(
+          create: (context) => UserManagementProvider(
+            userManagementService: UserManagementService(),
+          ),
+),
+       
       ],
       child: const MyApp(),
     ),
@@ -67,6 +76,7 @@ class MyApp extends StatelessWidget {
         '/report-lost': (context) => const DescribeItemScreen(),
         '/register': (context) => RegistrationScreen(),
         '/login': (context) => LoginScreen (),
+        '/users': (context) => UserManagementScreen (),
         
       },
     );
