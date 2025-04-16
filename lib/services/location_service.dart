@@ -121,4 +121,22 @@ class LocationService {
       rethrow;
     }
   }
+  Future<Location?> getLocationByCoordinates(double latitude, double longitude) async {
+    try {
+      final querySnapshot = await _firestore
+          .collection('locations')
+          .where('latitude', isEqualTo: latitude)
+          .where('longitude', isEqualTo: longitude)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        return Location.fromJson(querySnapshot.docs.first.data());
+      }
+      return null;
+    } catch (e) {
+      print('❌ Error fetching location by coordinates: $e');
+      rethrow;
+    }
+  }
 }

@@ -4,10 +4,13 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:foundita/firebase_options.dart';
+import 'package:foundita/providers/found_item_provider.dart';
 import 'package:foundita/providers/location_provider.dart';
 import 'package:foundita/screens/map_picker_screen.dart';
 import 'package:foundita/screens/register_screen.dart';
 import 'package:foundita/screens/login_screen.dart';
+import 'package:foundita/screens/report_found_screen.dart';
+import 'package:foundita/services/found_item_service.dart';
 import 'package:foundita/services/location_service.dart';
 import 'package:foundita/services/lost_item_service.dart';
 import 'package:foundita/services/usermanagement_service.dart';
@@ -72,6 +75,16 @@ void main() async {
         ChangeNotifierProvider(
           create: (context) => LocationProvider(locationService: LocationService()),
         ),
+        ChangeNotifierProxyProvider<LocationProvider, FoundItemProvider>(
+  create: (context) => FoundItemProvider(
+    foundItemService: FoundItemService(locationService: LocationService()),
+    locationProvider: Provider.of<LocationProvider>(context, listen: false),
+  ),
+  update: (context, locationProvider, previous) => FoundItemProvider(
+    foundItemService: FoundItemService(locationService: LocationService()),
+    locationProvider: locationProvider,
+  ),
+),
        
       ],
       child: const MyApp(),
@@ -98,7 +111,8 @@ class MyApp extends StatelessWidget {
         '/login': (context) => LoginScreen(),
         '/report-lost-test': (context) => const ReportLostItemScreen(),
         '/user-management': (context) => const UserManagementScreen(),
-        '/map-picker': (context) => const MapPickerScreen(),  // Add this line
+        '/map-picker': (context) => const MapPickerScreen(), 
+        '/report-found': (context) => ReportFoundItemScreen(),
         
       },
     );
