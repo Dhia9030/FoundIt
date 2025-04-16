@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:foundita/models/lost_item.dart';
-import 'package:foundita/models/item.dart'; // Ensure this is the correct path for your Category class
+import 'package:foundita/models/item.dart';
 import 'package:foundita/services/lost_item_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -20,7 +20,7 @@ class LostItemProvider with ChangeNotifier {
   String? get error => _error;
   List<LostItem> get lostItems => _lostItems;
 
-  /// Reports a lost item and updates state
+  /// Reports a lost item with location and updates state
   Future<void> reportLostItem({
     required String userId,
     required String itemName,
@@ -29,7 +29,8 @@ class LostItemProvider with ChangeNotifier {
     required String color,
     required DateTime date,
     required XFile? imageFile,
-    required String locationId,
+    required double latitude,
+    required double longitude,
     required DateTime lostDate,
   }) async {
     try {
@@ -43,16 +44,16 @@ class LostItemProvider with ChangeNotifier {
       }
 
       await _lostItemService.reportLostItem(
-        
         itemName: itemName,
         type: type,
         description: description,
         color: color,
         date: date,
         imageFile: image,
-        locationId: locationId,
+        latitude: latitude,
+        longitude: longitude,
         lostDate: lostDate, 
-        userId: '',
+        userId: userId,
       );
 
       // Refresh the list after reporting
@@ -72,15 +73,26 @@ class LostItemProvider with ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      // Implementation depends on how you want to handle the stream
-      // Option 1: Get a single snapshot
+      // Get a single snapshot from the stream
       final items = await _lostItemService.getLostItems().first;
       _lostItems = items;
-      
-      // Option 2: If you want continuous updates, you might want to:
-      // 1. Store the stream subscription
-      // 2. Update _lostItems in the subscription callback
-      // 3. Notify listeners when updates come in
+    } catch (e) {
+      _error = e.toString();
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Fetches lost items by location
+  Future<List<LostItem>> getLostItemsByLocation(String locationId) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      final items = await _lostItemService.getLostItemsByLocation(locationId);
+      return items;
     } catch (e) {
       _error = e.toString();
       rethrow;

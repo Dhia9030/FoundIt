@@ -4,8 +4,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:foundita/firebase_options.dart';
+import 'package:foundita/providers/location_provider.dart';
+import 'package:foundita/screens/map_picker_screen.dart';
 import 'package:foundita/screens/register_screen.dart';
 import 'package:foundita/screens/login_screen.dart';
+import 'package:foundita/services/location_service.dart';
 import 'package:foundita/services/lost_item_service.dart';
 import 'package:foundita/services/usermanagement_service.dart';
 import 'package:provider/provider.dart';
@@ -58,7 +61,17 @@ void main() async {
           create: (context) => UserManagementProvider(
             userManagementService: UserManagementService(),
           ),
+      
+          
 ),
+        ChangeNotifierProvider(
+          create: (context) => LostItemProvider(
+            lostItemService: LostItemService(locationService: LocationService()),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => LocationProvider(locationService: LocationService()),
+        ),
        
       ],
       child: const MyApp(),
@@ -85,6 +98,8 @@ class MyApp extends StatelessWidget {
         '/login': (context) => LoginScreen(),
         '/report-lost-test': (context) => const ReportLostItemScreen(),
         '/user-management': (context) => const UserManagementScreen(),
+        '/map-picker': (context) => const MapPickerScreen(),  // Add this line
+        
       },
     );
   }
@@ -185,5 +200,6 @@ class _HomePageState extends State<HomePage> {
         onTap: _handleNavTap,
       ),
     );
+    
   }
 }
