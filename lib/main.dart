@@ -7,6 +7,7 @@ import 'package:foundita/firebase_options.dart';
 import 'package:foundita/providers/found_item_provider.dart';
 import 'package:foundita/providers/location_provider.dart';
 import 'package:foundita/screens/map_picker_screen.dart';
+import 'package:foundita/screens/map_screen.dart';
 import 'package:foundita/screens/register_screen.dart';
 import 'package:foundita/screens/login_screen.dart';
 import 'package:foundita/screens/report_found_screen.dart';
@@ -85,6 +86,12 @@ void main() async {
     locationProvider: locationProvider,
   ),
 ),
+        ChangeNotifierProvider(
+          create: (context) => UserManagementProvider(
+            userManagementService: UserManagementService(),
+          ),
+        ),
+        
        
       ],
       child: const MyApp(),
@@ -113,6 +120,7 @@ class MyApp extends StatelessWidget {
         '/user-management': (context) => const UserManagementScreen(),
         '/map-picker': (context) => const MapPickerScreen(), 
         '/report-found': (context) => ReportFoundItemScreen(),
+        '/map': (context) => const FoundItemsMapPage(),
         
       },
     );

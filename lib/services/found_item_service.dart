@@ -133,4 +133,13 @@ class FoundItemService {
       rethrow;
     }
   }
+   Future<List<FoundItem>> getAllFoundItems() async {
+    try {
+      final snapshot = await _foundItemsCollection.get();
+      return snapshot.docs.map((doc) => FoundItem.fromJson(doc.data() as Map<String, dynamic>)).toList();
+    } catch (e) {
+      print('❌ Error fetching all found items: $e');
+      rethrow;
+    }
+  }
 }

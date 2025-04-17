@@ -98,8 +98,7 @@ class FoundItemProvider with ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-
-      _isLoading = false;
+      _foundItems = await _foundItemService.getAllFoundItems();
     } catch (e) {
       _error = e.toString();
     } finally {
