@@ -65,10 +65,10 @@ class ConversationProvider extends ChangeNotifier {
       // Simulate API call
       await Future.delayed(Duration(milliseconds: 500));
 
-      final conversation = _conversations.firstWhere(
-            (c) => c.id == conversationId,
-        orElse: () => throw Exception('Conversation not found'),
-      );
+      // final conversation = _conversations.firstWhere(
+      //       (c) => c.id == conversationId,
+      //   orElse: () => throw Exception('Conversation not found'),
+      // );
 
       final newMessage = Message(
         id: DateTime.now().millisecondsSinceEpoch.toString(),

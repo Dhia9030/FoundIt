@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/conversation.dart';
-import '../providers/theme_provider.dart';
 import '../providers/conversation_provider.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -52,8 +51,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final darkMode = themeProvider.isDarkMode;
+    // final themeProvider = Provider.of<ThemeProvider>(context);
+    // final darkMode = themeProvider.isDarkMode;
     final conversationProvider = Provider.of<ConversationProvider>(context);
 
     return Scaffold(

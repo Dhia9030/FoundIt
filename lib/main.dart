@@ -6,12 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:foundita/firebase_options.dart';
 import 'package:foundita/screens/register_screen.dart';
 import 'package:foundita/screens/login_screen.dart';
+import 'package:foundita/screens/report_found_screen.dart';
+import 'package:foundita/screens/search_screen.dart';
+import 'package:foundita/screens/sign_up_screen.dart';
 import 'package:provider/provider.dart';
 import 'providers/theme_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/report_lost_screen.dart';
-import 'screens/login_screen.dart';
 import 'widgets/bottom_navbar.dart';
 import 'widgets/menu_drawer.dart';
 import 'models/item_provider.dart';
@@ -61,12 +63,14 @@ class MyApp extends StatelessWidget {
       routes: {
 
         '/home': (context) => const HomePage(initialTabIndex: 1),
-        '/search': (context) => const HomePage(initialTabIndex: 0),
+        '/search': (context) => SearchScreen(),
         '/notifications': (context) => const HomePage(initialTabIndex: 2),
         '/profile': (context) => const HomePage(initialTabIndex: 3),
         '/report-lost': (context) => const DescribeItemScreen(),
+        '/report-found': (context) => const ReportFoundItemForm(),
         '/register': (context) => RegistrationScreen(),
         '/login': (context) => LoginScreen (),
+        '/sign-up': (context) => RegisterScreen(),
         
       },
     );

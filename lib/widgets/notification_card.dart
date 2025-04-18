@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 import '../models/mock_notification.dart';
-import '../providers/conversation_provider.dart';
 import '../screens/chat_screen.dart';
 import '../models/conversation.dart';// Ensure this import is correct
 
@@ -44,10 +42,10 @@ class NotificationCard extends StatelessWidget {
         child: InkWell(
           onTap: () async {
             try {
-              final conversationProvider = Provider.of<ConversationProvider>(
-                context,
-                listen: false,
-              );
+              // final conversationProvider = Provider.of<ConversationProvider>(
+              //   context,
+              //   listen: false,
+              // );
 
               // Create a new conversation or get existing one
               final conversation = Conversation(
