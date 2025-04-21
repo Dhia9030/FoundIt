@@ -107,7 +107,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: Provider.of<ThemeProvider>(context).themeData,
-      home: const HomePage(),
+      home: const AuthWrapper(),
       routes: {
         '/home': (context) => const HomePage(initialTabIndex: 1),
         '/search': (context) => const HomePage(initialTabIndex: 0),
@@ -223,5 +223,34 @@ class _HomePageState extends State<HomePage> {
       ),
     );
     
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = FirebaseAuth.instance;
+
+    return StreamBuilder<User?>(
+      stream: auth.authStateChanges(),
+      builder: (context, snapshot) {
+        // Show loading indicator while checking auth state
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        // User is logged in - show the app
+        if (snapshot.hasData) {
+          return const HomePage();
+        }
+
+        // User is not logged in - show login screen
+        return const LoginScreen();
+      },
+    );
   }
 }
