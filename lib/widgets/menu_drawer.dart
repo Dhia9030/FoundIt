@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
-import '../models/theme_provider.dart';
+import '../providers/theme_provider.dart';
+import '../screens/login_screen.dart';
 
 class MenuDrawer extends StatefulWidget {
   final bool isMenuOpen;
@@ -127,7 +129,20 @@ class _MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateM
                   text: 'Logout',
                   textColor: Colors.red,
                   iconColor: Colors.red,
-                  onTap: () => print('Logout'),
+                  onTap: () async {
+                    try {
+                      await FirebaseAuth.instance.signOut();
+                      // Navigate to login screen and remove all previous routes
+                      Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      (Route<dynamic> route) => false,
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Logout failed: ${e.toString()}')),
+                      );
+                    }
+                    },
                 ),
               ],
             ),

@@ -30,7 +30,6 @@ environment:
 dependencies:
   google_maps_flutter: ^2.2.3
   flutter_dotenv: ^5.0.2
-  intl: ^0.18.1  # Add this line
   flutter:
     sdk: flutter
 
@@ -42,6 +41,18 @@ dependencies:
   flutter_svg: ^2.0.7
   provider: ^6.0.5
   shared_preferences: ^2.2.0
+  google_fonts: ^6.2.1
+  image_picker: ^0.8.7+5
+  firebase_core: ^3.12.1
+  firebase_auth: ^5.5.2
+  cloud_firestore: ^5.6.6
+  intl: ^0.20.2
+  firebase_storage: ^12.4.5
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  geolocator: ^14.0.0
+  geocoding: ^3.0.0
+  flutter_map_marker_popup: ^7.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

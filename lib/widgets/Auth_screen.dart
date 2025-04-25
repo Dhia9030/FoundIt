@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
-import '../models/theme_provider.dart';
 
 // Base Auth Screen (Common elements for both forms)
 class AuthScreen extends StatelessWidget {
