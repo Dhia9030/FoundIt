@@ -3,8 +3,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
-import '../models/theme_provider.dart';
-
 class FoundItemForm extends StatefulWidget {
   @override
   _FoundItemFormState createState() => _FoundItemFormState();
@@ -22,8 +20,8 @@ class _FoundItemFormState extends State<FoundItemForm> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final darkMode = themeProvider.isDarkMode;
+    // final themeProvider = Provider.of<ThemeProvider>(context);
+     final darkMode = true;
 
     return Scaffold(
       backgroundColor: darkMode ? const Color(0xFF1B262C) : const Color(0xFFD1ECFF),
