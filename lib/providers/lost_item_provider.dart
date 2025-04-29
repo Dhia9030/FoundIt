@@ -4,23 +4,23 @@ import 'package:foundita/models/item.dart';
 import 'package:foundita/services/lost_item_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'dart:typed_data';
 
 class LostItemProvider with ChangeNotifier {
   final LostItemService _lostItemService;
-  
+
   bool _isLoading = false;
   String? _error;
   List<LostItem> _lostItems = [];
 
-  LostItemProvider({required LostItemService lostItemService}) 
+  LostItemProvider({required LostItemService lostItemService})
       : _lostItemService = lostItemService;
 
-  // Getters
   bool get isLoading => _isLoading;
   String? get error => _error;
   List<LostItem> get lostItems => _lostItems;
 
-  /// Reports a lost item with location and updates state
+
   Future<void> reportLostItem({
     required String userId,
     required String itemName,
@@ -38,9 +38,13 @@ class LostItemProvider with ChangeNotifier {
       _error = null;
       notifyListeners();
 
-      File? image;
+      dynamic imageData;
       if (imageFile != null) {
-        image = File(imageFile.path);
+        if (kIsWeb) {
+          imageData = await imageFile.readAsBytes(); 
+        } else {
+          imageData = File(imageFile.path); 
+        }
       }
 
       await _lostItemService.reportLostItem(
@@ -49,14 +53,13 @@ class LostItemProvider with ChangeNotifier {
         description: description,
         color: color,
         date: date,
-        imageFile: image,
+        imageFile: imageData,
         latitude: latitude,
         longitude: longitude,
-        lostDate: lostDate, 
+        lostDate: lostDate,
         userId: userId,
       );
 
-      // Refresh the list after reporting
       await fetchLostItems();
     } catch (e) {
       _error = e.toString();
@@ -67,13 +70,12 @@ class LostItemProvider with ChangeNotifier {
     }
   }
 
-  /// Fetches all lost items
   Future<void> fetchLostItems() async {
     try {
       _isLoading = true;
       notifyListeners();
 
-      // Get a single snapshot from the stream
+
       final items = await _lostItemService.getLostItems().first;
       _lostItems = items;
     } catch (e) {
@@ -85,7 +87,7 @@ class LostItemProvider with ChangeNotifier {
     }
   }
 
-  /// Fetches lost items by location
+
   Future<List<LostItem>> getLostItemsByLocation(String locationId) async {
     try {
       _isLoading = true;
@@ -102,7 +104,7 @@ class LostItemProvider with ChangeNotifier {
     }
   }
 
-  /// Updates found status of an item
+
   Future<void> updateFoundStatus(String itemId, bool isFound) async {
     try {
       _isLoading = true;
@@ -110,7 +112,7 @@ class LostItemProvider with ChangeNotifier {
 
       await _lostItemService.updateFoundStatus(itemId, isFound);
       
-      // Update local state
+
       final index = _lostItems.indexWhere((item) => item.itemId == itemId);
       if (index != -1) {
         _lostItems[index] = _lostItems[index].copyWith(isFound: isFound);
@@ -124,7 +126,7 @@ class LostItemProvider with ChangeNotifier {
     }
   }
 
-  /// Deletes a lost item
+
   Future<void> deleteLostItem(String itemId) async {
     try {
       _isLoading = true;
@@ -132,7 +134,7 @@ class LostItemProvider with ChangeNotifier {
 
       await _lostItemService.deleteLostItem(itemId);
       
-      // Update local state
+
       _lostItems.removeWhere((item) => item.itemId == itemId);
     } catch (e) {
       _error = e.toString();

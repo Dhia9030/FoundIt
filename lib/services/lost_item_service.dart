@@ -1,34 +1,41 @@
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io';
-import 'package:foundita/models/item.dart';
+import 'package:foundita/models/item.dart' as foundita_item;
 import 'package:foundita/models/lost_item.dart';
 import 'package:foundita/services/location_service.dart';
+import 'package:http/http.dart' as http; // Import the http package
+import 'package:path/path.dart' as path; // For getting filename
+import 'package:flutter/foundation.dart' hide Category;
+import 'package:http_parser/http_parser.dart'; // For MediaType
+import 'dart:typed_data'; // For Uint8List
 
 class LostItemService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
   final LocationService _locationService;
+  final String _uploadImageUrl = dotenv.env['BACKEND_UPLOAD_URL']!;
+  final String _uploadapiKey = dotenv.env['UPLOAD_API_KEY']!;
 
-  LostItemService({required LocationService locationService}) 
+  LostItemService({required LocationService locationService})
       : _locationService = locationService;
 
   // Reference to the lost items collection
-  CollectionReference get _lostItemsCollection => 
+  CollectionReference get _lostItemsCollection =>
       _firestore.collection('lostItems');
 
   /// Reports a new lost item to Firestore with location
   /// Returns the document ID of the newly created item
   Future<String> reportLostItem({
     required String itemName,
-    required Category type,
+    required foundita_item.Category type,
     required String description,
     required String color,
     required DateTime date,
-    required File? imageFile,
+    required dynamic imageFile, // Changed to dynamic
     required double latitude,
     required double longitude,
-    required DateTime lostDate, 
+    required DateTime lostDate,
     required String userId,
   }) async {
     try {
@@ -41,12 +48,18 @@ class LostItemService {
       // 2. Upload image if provided
       String? photoUrl;
       if (imageFile != null) {
-        photoUrl = await _uploadImage(imageFile);
+        if (imageFile is File) {
+          photoUrl = await _uploadImage(imageFile);
+        } else if (imageFile is Uint8List) {
+          photoUrl = await _uploadImageBytes(imageFile);
+        } else {
+          print('Unsupported image data type: ${imageFile.runtimeType}');
+        }
       }
 
       // 3. Create a new LostItem
       final newItem = LostItem(
-        userId: userId, 
+        userId: userId,
         itemId: '', // Will be set by Firestore
         itemName: itemName,
         type: type,
@@ -74,21 +87,78 @@ class LostItemService {
     }
   }
 
-  /// Uploads an image to Firebase Storage and returns the download URL
+
+  /// Uploads an image to the Python backend and returns the blob name
   Future<String> _uploadImage(File imageFile) async {
     try {
-      // Create a unique filename
-      final String fileName = 'lost_items/${DateTime.now().millisecondsSinceEpoch}.jpg';
-      
-      // Upload the file
-      final Reference storageRef = _storage.ref().child(fileName);
-      final UploadTask uploadTask = storageRef.putFile(imageFile);
-      final TaskSnapshot snapshot = await uploadTask;
-      
-      // Get the download URL
-      return await snapshot.ref.getDownloadURL();
+      final uri = Uri.parse(_uploadImageUrl);
+      final request = http.MultipartRequest('POST', uri);
+      request.headers['X-API-Key'] = _uploadapiKey;
+
+      if (kIsWeb) {
+        // For web, read the file as bytes
+        final bytes = await imageFile.readAsBytes();
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'file',
+            bytes,
+            contentType: MediaType('image','png'), // Adjust content type if needed
+           
+          ),
+        );
+      } else {
+        // For mobile, use fromPath (dart:io is available)
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'file',
+            imageFile.path,
+            filename: path.basename(imageFile.path),
+          ),
+        );
+      }
+
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+      final jsonResponse = jsonDecode(responseBody);
+
+      if (response.statusCode == 200 && jsonResponse['status'] == 'success') {
+        return jsonResponse['blob_name'];
+      } else {
+        print('Error uploading image to backend: ${response.statusCode} - $responseBody');
+        throw Exception('Failed to upload image to backend');
+      }
     } catch (e) {
       print('Error uploading image: $e');
+      rethrow;
+    }
+  }
+
+   Future<String> _uploadImageBytes(Uint8List imageBytes) async {
+    try {
+      final uri = Uri.parse(_uploadImageUrl);
+      final request = http.MultipartRequest('POST', uri);
+      request.headers['X-API-Key'] = _uploadapiKey;
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'file',
+          imageBytes,
+          filename: 'image_${DateTime.now().millisecondsSinceEpoch}.jpg',
+           contentType: MediaType('image','png'), // Adjust content type if needed
+        ),
+      );
+
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+      final jsonResponse = jsonDecode(responseBody);
+
+      if (response.statusCode == 200 && jsonResponse['status'] == 'success') {
+        return jsonResponse['blob_name'];
+      } else {
+        print('Error uploading image bytes to backend: ${response.statusCode} - $responseBody');
+        throw Exception('Failed to upload image bytes to backend');
+      }
+    } catch (e) {
+      print('❌ Error uploading image bytes: $e');
       rethrow;
     }
   }
