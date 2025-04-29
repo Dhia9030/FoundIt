@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:foundita/widgets/found_item_details_widget.dart';
 import 'package:foundita/widgets/image_widget.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
@@ -137,12 +138,18 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
                 style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 10),
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                print('View Details for ${item.itemId}');
-              },
-              child: const Text('View Full Details'),
-            ),
+  onPressed: () {
+    Navigator.pop(context); // Close the bottom sheet
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FoundItemDetailsScreen(item: item),
+      ),
+    );
+    print('View Details for ${item.itemId}');
+  },
+  child: const Text('View Full Details'),
+),
           ],
         ),
       );
