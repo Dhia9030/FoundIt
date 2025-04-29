@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:foundita/widgets/image_widget.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:foundita/models/found_item.dart';
 import 'package:foundita/providers/found_item_provider.dart';
 import 'package:foundita/providers/location_provider.dart';
 import 'package:foundita/models/location.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:developer';
 
 class FoundItemsMapPage extends StatefulWidget {
   const FoundItemsMapPage({Key? key}) : super(key: key);
@@ -38,8 +42,7 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
 
       final locationProvider =
           Provider.of<LocationProvider>(context, listen: false);
-      await locationProvider
-          .fetchAllLocations();
+      await locationProvider.fetchAllLocations();
 
       List<Marker> markers = [];
       for (final foundItem in foundItemProvider.foundItems) {
@@ -48,22 +51,33 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
           orElse: () =>
               Location(id: '', latitude: 0.0, longitude: 0.0, itemIds: []),
         );
+        final headers = {'X-API-Key': dotenv.env['DOWNLOAD_KEY']!};
+        if(!headers.containsKey('X-API-Key')) {
+          throw Exception('API key not found in headers.');
+        } else {
+          log('API key found in headers.');
+        }
 
         if (location.latitude != null && location.longitude != null) {
           markers.add(
             Marker(
               point: LatLng(location.latitude!, location.longitude!),
-              width: 40,
-              height: 40,
+              width: 50,
+              height: 50,
               child: GestureDetector(
                 onTap: () {
                   _showItemDetails(context, foundItem);
                 },
-                child: const Icon(
-                  Icons.location_pin,
-                  color: Colors.blue,
-                  size: 40,
-                ),
+                child: SizedBox(
+  width: 50,
+  height: 50,
+  child: ClipRRect(
+    borderRadius: BorderRadius.circular(8.0),
+    child: foundItem.photo.isNotEmpty
+        ? ImageFromBackend(blobName: foundItem.photo, fit: BoxFit.cover)
+        : const Icon(Icons.photo_library, color: Colors.grey, size: 20),
+  ),
+),
               ),
             ),
           );
@@ -75,7 +89,9 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
       });
 
       if (_foundItemMarkers.isNotEmpty) {
-        _mapController.move(_foundItemMarkers.first.point, 12.0);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _mapController.move(_foundItemMarkers.first.point, 12.0);
+        });
       }
     } catch (e) {
       setState(() {
@@ -88,33 +104,51 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
   }
 
   void _showItemDetails(BuildContext context, FoundItem item) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Text('Found Item Details',
-                  style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 10),
-              Text('Description: ${item.description}',
-                  style: Theme.of(context).textTheme.bodyLarge),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('View Details'),
+  showModalBottomSheet(
+    context: context,
+    builder: (BuildContext context) {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text('Found Item Details',
+                style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 10),
+            if (item.photo.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(
+                    height: 150,
+                    child: ImageFromBackend(blobName: item.photo, fit: BoxFit.cover),
+                  ),
+                  const SizedBox(height: 10),
+                ],
               ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+            Text('Name: ${item.itemName}',
+                style: Theme.of(context).textTheme.bodyLarge),
+            const SizedBox(height: 5),
+            Text('Description: ${item.description}',
+                style: Theme.of(context).textTheme.bodyMedium),
+            const SizedBox(height: 5),
+            Text('Color: ${item.color}',
+                style: Theme.of(context).textTheme.bodyMedium),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                print('View Details for ${item.itemId}');
+              },
+              child: const Text('View Full Details'),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
 
   @override
   Widget build(BuildContext context) {
