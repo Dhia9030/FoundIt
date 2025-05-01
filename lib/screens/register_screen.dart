@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:foundita/services/register_service.dart';
 import 'package:provider/provider.dart';
-import 'package:foundita/providers/registerprovider.dart';
+import 'package:foundita/providers/registerprovider.dart' as register;
 
 // class RegistrationScreen extends StatefulWidget {
 //   @override
@@ -104,11 +106,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final _confirmPasswordController = TextEditingController();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final RegisterService _registerService = RegisterService();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
   Future<void> _register(BuildContext context) async {
-    print(context);
+    print("clicked");
+    _signup();
     // if (!_formKey.currentState!.validate()) return;
     //
     // final registerProvider =
@@ -143,13 +147,23 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _nameController.dispose();
+    _phoneController.dispose();
+
+    super.dispose();
+  }
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Créer un compte')),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Consumer<RegisterProvider>(
+          child: Consumer<register.RegisterProvider>(
             builder: (context, registerProvider, _) {
               return Form(
                 key: _formKey,
@@ -298,5 +312,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         ],
       ),
     );
+  }
+
+  void _signup () async {
+    User? user = await _registerService.registerWithEmailAndPassword(name: _nameController.text, email: _emailController.text, password: _passwordController.text,  phoneNumber: _phoneController.text);
+    if (user != null) {
+      print("user created successfully");
+      Navigator.pushNamed(context, '/home');
+    }
+    else {
+      print("failed to create user");
+    }
   }
 }

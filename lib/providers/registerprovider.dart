@@ -1,9 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:foundita/models/user.dart' as foundita_user;
 import 'package:foundita/services/register_service.dart';
 
 
-import 'package:flutter/foundation.dart';
 import 'package:foundita/models/account_holder.dart';
 import 'package:foundita/models/user.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
