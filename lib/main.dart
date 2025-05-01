@@ -1,8 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:foundita/firebase_options.dart';
 import 'package:foundita/providers/found_item_provider.dart';
 import 'package:foundita/providers/location_provider.dart';
@@ -20,7 +19,6 @@ import 'providers/theme_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/report_lost_screen.dart';
-import 'screens/login_screen.dart';
 import 'screens/usermanagement_screen.dart';
 import 'widgets/bottom_navbar.dart';
 import 'widgets/menu_drawer.dart';
@@ -31,12 +29,8 @@ import 'providers/login_provider.dart';
 import 'providers/usermanagement_provider.dart';
 import 'services/register_service.dart';
 import 'services/login_service.dart';
-
 import 'screens/report_lost_test.dart';
-import 'services/usermanagement_service.dart';
 import 'providers/lost_item_provider.dart';
-import "screens/usermanagement_screen.dart";
-import "providers/usermanagement_provider.dart";
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,10 +39,11 @@ void main() async {
   );
 
   // Connect to Firebase Emulators (for local testing)
-  if (kDebugMode) {
-    await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
-    FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
-  }
+  // if (kDebugMode) {
+    //await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
+    //FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
+  //}
+  await dotenv.load(fileName: '.env');
   runApp(
     MultiProvider(
       providers: [

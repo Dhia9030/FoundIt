@@ -12,7 +12,7 @@ import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:foundita/models/item.dart';
 import 'package:foundita/models/found_item.dart';
-import 'package:foundita/models/location.dart'; 
+import 'package:foundita/models/location.dart';
 
 class FoundItemProvider with ChangeNotifier {
   final FoundItemService _foundItemService;
@@ -26,9 +26,7 @@ class FoundItemProvider with ChangeNotifier {
       {required FoundItemService foundItemService,
       required LocationProvider locationProvider})
       : _foundItemService = foundItemService,
-        _locationProvider =
-            locationProvider;
-
+        _locationProvider = locationProvider;
 
   bool get isLoading => _isLoading;
   String? get error => _error;
@@ -42,8 +40,8 @@ class FoundItemProvider with ChangeNotifier {
     required String color,
     required DateTime date,
     required XFile? imageFile,
-    required double latitude, 
-    required double longitude, 
+    required double latitude,
+    required double longitude,
     required DateTime foundDate,
   }) async {
     _isLoading = true;
@@ -91,7 +89,6 @@ class FoundItemProvider with ChangeNotifier {
     }
     return success;
   }
-
 
   Future<void> fetchFoundItems() async {
     _isLoading = true;

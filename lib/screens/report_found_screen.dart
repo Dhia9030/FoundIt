@@ -285,13 +285,38 @@ class _ReportFoundItemScreenState extends State<ReportFoundItemScreen> {
                   onPressed: _pickImage,
                   child: Text('Pick Image'),
                 ),
-                if (_imageFile != null) ...[
-                  SizedBox(height: 12),
-                  Image.file(
-                    File(_imageFile!.path),
-                    height: 100,
-                  ),
-                ],
+                if (_imageFile != null)
+  Container(
+    height: 150,
+    decoration: BoxDecoration(
+      border: Border.all(color: Colors.grey),
+      borderRadius: BorderRadius.circular(4),
+    ),
+    child: Stack(
+      children: [
+        Center(
+          child: Image.network( // ✅ This is web-compatible
+            _imageFile!.path,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) =>
+                Icon(Icons.image, size: 50),
+          ),
+        ),
+        Positioned(
+          top: 0,
+          right: 0,
+          child: IconButton(
+            icon: Icon(Icons.close, color: Colors.red),
+            onPressed: () {
+              setState(() {
+                _imageFile = null;
+              });
+            },
+          ),
+        ),
+      ],
+    ),
+  ),
                 SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () async {
