@@ -108,37 +108,38 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   bool _obscureConfirmPassword = true;
 
   Future<void> _register(BuildContext context) async {
-    if (!_formKey.currentState!.validate()) return;
-
-    final registerProvider =
-    Provider.of<RegisterProvider>(context, listen: false);
-
-    try {
-      await registerProvider.registerWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-        name: _nameController.text.trim(),
-        phoneNumber: _phoneController.text.trim(),
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Inscription réussie! Bienvenue!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
-
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) {
-            Navigator.pushReplacementNamed(context, '/home');
-          }
-        });
-      }
-    } catch (e) {
-      // Error handled by provider
-    }
+    print(context);
+    // if (!_formKey.currentState!.validate()) return;
+    //
+    // final registerProvider =
+    // Provider.of<RegisterProvider>(context, listen: false);
+    //
+    // try {
+    //   await registerProvider.registerWithEmailAndPassword(
+    //     email: _emailController.text.trim(),
+    //     password: _passwordController.text.trim(),
+    //     name: _nameController.text.trim(),
+    //     phoneNumber: _phoneController.text.trim(),
+    //   );
+    //
+    //   if (mounted) {
+    //     ScaffoldMessenger.of(context).showSnackBar(
+    //       const SnackBar(
+    //         content: Text('Inscription réussie! Bienvenue!'),
+    //         backgroundColor: Colors.green,
+    //         duration: Duration(seconds: 2),
+    //       ),
+    //     );
+    //
+    //     Future.delayed(const Duration(seconds: 2), () {
+    //       if (mounted) {
+    //         Navigator.pushReplacementNamed(context, '/home');
+    //       }
+    //     });
+    //   }
+    // } catch (e) {
+    //   // Error handled by provider
+    // }
   }
 
   @override
