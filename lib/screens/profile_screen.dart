@@ -17,11 +17,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
 
- @override
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Fetch the user profile only if it hasn't been fetched yet or if you need to refresh it.
-    // You might want to add a flag in your ProfileProvider to track if it's been loaded.
     final profileProvider = Provider.of<ProfileProvider>(context, listen: false);
     if (profileProvider.currentUser == null && !profileProvider.isLoading) {
       profileProvider.fetchCurrentUserProfile();
@@ -94,16 +92,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ListTile(
                                   leading: const Icon(Icons.photo_library),
                                   title: const Text('Pick from Gallery'),
-                                  onTap: () {
-                                    provider.pickProfileImage(ImageSource.gallery);
+                                  onTap: () async {
+                                    await provider.pickProfileImage(ImageSource.gallery);
                                     Navigator.pop(context);
                                   },
                                 ),
                                 ListTile(
                                   leading: const Icon(Icons.camera_alt),
                                   title: const Text('Take a Photo'),
-                                  onTap: () {
-                                    provider.pickProfileImage(ImageSource.camera);
+                                  onTap: () async {
+                                    await provider.pickProfileImage(ImageSource.camera);
                                     Navigator.pop(context);
                                   },
                                 ),
@@ -117,22 +115,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       alignment: Alignment.center,
                       children: [
                         CircleAvatar(
-                          radius: 60,
-                          backgroundImage: provider.profileImageFile != null
-                              ? FileImage(provider.profileImageFile!) as ImageProvider<Object>?
-                              : provider.profileImageBytes != null
-                                  ? MemoryImage(provider.profileImageBytes!)
-                                  : null,
-                          child: user.profilePictureBlobName != null && user.profilePictureBlobName!.isNotEmpty
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(60),
-                                  child: ImageFromBackend(blobName: user.profilePictureBlobName!),
-                                )
-                              : const CircleAvatar(
-                                  radius: 60,
-                                  child: Icon(Icons.person, size: 60),
-                                ),
-                        ),
+  radius: 60,
+  backgroundImage: provider.profileImageFile != null
+      ? FileImage(provider.profileImageFile!) as ImageProvider<Object>?
+      : provider.profileImageBytes != null
+          ? MemoryImage(provider.profileImageBytes!)
+          : user.profilePictureBlobName != null && user.profilePictureBlobName!.isNotEmpty
+              ? null // Don't set backgroundImage if there's a backend image AND no new image
+              : null,
+  child: provider.profileImageFile == null && provider.profileImageBytes == null && user.profilePictureBlobName != null && user.profilePictureBlobName!.isNotEmpty
+      ? ClipRRect(
+          borderRadius: BorderRadius.circular(60),
+          child: ImageFromBackend(blobName: user.profilePictureBlobName!),
+        )
+      : provider.profileImageFile == null && provider.profileImageBytes == null
+          ? const CircleAvatar(
+              radius: 60,
+              child: Icon(Icons.person, size: 60),
+            )
+          : null, // Don't show the default icon if a new image is picked
+),
                         const Positioned(
                           bottom: 0,
                           right: 0,

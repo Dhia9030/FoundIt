@@ -47,7 +47,10 @@ class ProfileProvider with ChangeNotifier {
         _profileImageFile = File(pickedFile.path);
         _profileImageBytes = null; // Clear the bytes for mobile
       }
-      notifyListeners();
+      // Add this Future.delayed to ensure the UI has a chance to rebuild
+      Future.delayed(Duration.zero, () {
+        notifyListeners();
+      });
     }
   }
 
