@@ -34,7 +34,9 @@ import 'providers/lost_item_provider.dart';
 import 'services/profile_service.dart'; // Import ProfileService
 import 'providers/profile_provider.dart'; // Import ProfileProvider
 import 'screens/profile_screen.dart'; // Import ProfileScreen
-
+import 'package:foundita/providers/dashboard_provider.dart';
+import 'package:foundita/services/dashboard_service.dart';
+import 'package:foundita/screens/dashboard_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -94,6 +96,12 @@ void main() async {
         ChangeNotifierProvider<ProfileProvider>( // Add ProfileProvider
           create: (context) => ProfileProvider(profileService: context.read<ProfileService>()),
         ),
+        Provider(create: (_) => AdminDashboardService()),
+    ChangeNotifierProvider(
+      create: (context) => DashboardProvider(
+        adminDashboardService: context.read<AdminDashboardService>(),
+      ),
+    ),
       ],
       child: const MyApp(),
     ),
@@ -122,6 +130,7 @@ class MyApp extends StatelessWidget {
         '/map-picker': (context) => const MapPickerScreen(),
         '/report-found': (context) => ReportFoundItemScreen(),
         '/map': (context) => const FoundItemsMapPage(),
+        '/dashboard': (context) => const DashboardScreen(),
       },
     );
   }
