@@ -103,6 +103,67 @@ class HomeScreen extends StatelessWidget {
               height: 60,
             ),
           ),
+          
+          // Chat Button (New addition - positioned in the middle)
+          Positioned(
+            top: 360,
+            left: MediaQuery.of(context).size.width / 2 - 75, // Centered horizontally
+            child: GestureDetector(
+              onTap: () {
+                // Navigate to chat screen with a dummy user ID
+                Navigator.pushNamed(
+                  context,
+                  '/chat',
+                  arguments: {
+                    'otherUserId': 'Y5Kb2cgUy0VQQHkbaT9vO61XGLn1', // Replace with actual user ID in your app
+                  },
+                );
+              },
+              child: Container(
+                width: 150,
+                height: 60,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: ShapeDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [const Color(0xFF4CAF50), const Color(0xFF2E7D32)],
+                  ),
+                  shape: RoundedRectangleBorder(
+                    side: BorderSide(width: 1),
+                    borderRadius: BorderRadius.circular(35),
+                  ),
+                  shadows: [
+                    BoxShadow(
+                      color: Color(0x3F535353),
+                      blurRadius: 4,
+                      offset: Offset(5, 5),
+                      spreadRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.chat, color: Colors.white),
+                    SizedBox(width: 8),
+                    Text(
+                      'Chat',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontFamily: 'Montserrat',
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
           // Updated star icon with shadow
           Positioned(
             top: 30,

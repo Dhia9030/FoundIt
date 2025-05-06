@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:foundita/firebase_options.dart';
 import 'package:foundita/providers/found_item_provider.dart';
 import 'package:foundita/providers/location_provider.dart';
+import 'package:foundita/screens/chat_screen.dart';
 import 'package:foundita/screens/map_picker_screen.dart';
 import 'package:foundita/screens/map_screen.dart';
 import 'package:foundita/screens/register_screen.dart';
@@ -131,6 +132,10 @@ class MyApp extends StatelessWidget {
         '/report-found': (context) => ReportFoundItemScreen(),
         '/map': (context) => const FoundItemsMapPage(),
         '/dashboard': (context) => const DashboardScreen(),
+         '/chat': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return ChatScreen(otherUserId: args['otherUserId']);
+        },
       },
     );
   }
@@ -152,7 +157,7 @@ class _HomePageState extends State<HomePage> {
   final List<Widget> _pages = [
     const Center(child: Text('Search Page')), // Index 0: Search
     HomeScreen(), // Index 1: Home
-    const NotificationsScreen(), // Index 2: Notifications
+    //const NotificationsScreen(), Index 2: Notifications
     const ProfileScreen(), // Index 3: Profile - Changed to the actual ProfileScreen
     const Center(child: Text('Register')), // Index 4: Register
     const Center(child: Text('Login')) // Index 5: Login
