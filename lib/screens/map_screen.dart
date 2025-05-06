@@ -1,5 +1,7 @@
  import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:foundita/services/found_item_service.dart';
+import 'package:foundita/services/location_service.dart';
 import 'package:foundita/widgets/found_item_details_widget.dart';
 import 'package:foundita/widgets/image_widget.dart';
 import 'package:latlong2/latlong.dart';
@@ -11,6 +13,8 @@ import 'package:foundita/models/location.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:developer';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 class FoundItemsMapPage extends StatefulWidget {
   const FoundItemsMapPage({Key? key}) : super(key: key);
@@ -21,6 +25,7 @@ class FoundItemsMapPage extends StatefulWidget {
 
 class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
   final MapController _mapController = MapController();
+
   LatLng _initialPosition = LatLng(36.8065, 10.1815);
   double _initialZoom = 10.0;
   List<Marker> _foundItemMarkers = [];
@@ -30,6 +35,9 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
   void initState() {
     super.initState();
     _loadFoundItemsAndLocations();
+    // final _foundItemService = FoundItemService(locationService: LocationService());
+    // final items = _foundItemService.getAllFoundItems();
+    // print(items);
   }
 
   Future<void> _loadFoundItemsAndLocations() async {
@@ -184,3 +192,131 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
     );
   }
 }
+
+
+ class TestFirebaseFetchWidget extends StatefulWidget {
+   const TestFirebaseFetchWidget({super.key});
+
+   @override
+   State<TestFirebaseFetchWidget> createState() => _TestFirebaseFetchWidgetState();
+ }
+
+ class _TestFirebaseFetchWidgetState extends State<TestFirebaseFetchWidget> {
+   final FirestoreService _firestoreService = FirestoreService();
+   List<FoundItem> _items = [];
+   bool _isLoading = true;
+   String _error = '';
+
+   @override
+   void initState() {
+     super.initState();
+     _loadItems();
+   }
+
+   Future<void> _loadItems() async {
+     try {
+       final items = await _firestoreService.fetchLostItems();
+       setState(() {
+         _items = items;
+         _isLoading = false;
+       });
+     } catch (e) {
+       setState(() {
+         _error = e.toString();
+         _isLoading = false;
+       });
+     }
+   }
+
+   @override
+   Widget build(BuildContext context) {
+     return Scaffold(
+       appBar: AppBar(title: const Text('Firebase Data Test')),
+       body: _isLoading
+           ? const Center(child: CircularProgressIndicator())
+           : _error.isNotEmpty
+           ? Center(child: Text('Error: $_error'))
+           : ListView.builder(
+         itemCount: _items.length,
+         itemBuilder: (context, index) {
+           final item = _items[index];
+           return ListTile(
+             title: Text(item.itemName),
+             subtitle: Text(item.description),
+             trailing: Text(item.isFound ? 'Found' : 'Lost'),
+             onTap: () => _showItemDetails(item),
+           );
+         },
+       ),
+     );
+   }
+
+   void _showItemDetails(FoundItem item) {
+     showDialog(
+       context: context,
+       builder: (context) => AlertDialog(
+         title: Text(item.itemName),
+         content: SingleChildScrollView(
+           child: Column(
+             crossAxisAlignment: CrossAxisAlignment.start,
+             children: [
+               Text('Description: ${item.description}'),
+               Text('Color: ${item.color}'),
+               Text('Type: ${item.type}'),
+               Text('Lost Date: ${item.foundDate}'),
+               Text('Location ID: ${item.locationId}'),
+               Text('User ID: ${item.userId}'),
+             ],
+           ),
+         ),
+         actions: [
+           TextButton(
+             onPressed: () => Navigator.pop(context),
+             child: const Text('Close'),
+           ),
+         ],
+       ),
+     );
+   }
+ }
+
+ class FirestoreService {
+   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+   Future<List<FoundItem>> fetchLostItems() async {
+     try {
+       print('Attempting to fetch data from Firestore...');
+       final querySnapshot = await _firestore
+           .collection('found_items')
+           .where('isFound', isEqualTo: false)
+           .get();
+
+       print('Received ${querySnapshot.docs.length} documents');
+
+       querySnapshot.docs.forEach((doc) {
+         print('Document ID: ${doc.id}');
+         print('Document Data: ${doc.data()}');
+       });
+
+       return querySnapshot.docs.map((doc) {
+         final data = doc.data();
+         return FoundItem(
+           itemId: doc.id,
+           itemName: data['itemName'] ?? '',
+           description: data['description'] ?? '',
+           color: data['color'] ?? '',
+           type: data['type'] ?? 'other',
+           isFound: data['isFound'] ?? false,
+           foundDate: data['lostDate'] ?? '',
+           date: data['date'] ?? '',
+           locationId: data['locationId'] ?? '',
+           photo: data['photo'] ?? '',
+           userId: data['userId'] ?? '',
+         );
+       }).toList();
+     } catch (e) {
+       print('Firestore Error: $e');
+       throw Exception('Failed to fetch items: $e');
+     }
+   }
+ }

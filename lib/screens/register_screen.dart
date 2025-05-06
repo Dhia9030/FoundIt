@@ -106,7 +106,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final _confirmPasswordController = TextEditingController();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
-  final RegisterService _registerService = RegisterService();
+  final RegisterService registerProvider = RegisterService();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
@@ -315,7 +315,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   void _signup () async {
-    User? user = await _registerService.registerWithEmailAndPassword(name: _nameController.text, email: _emailController.text, password: _passwordController.text,  phoneNumber: _phoneController.text);
+    User? user = await registerProvider.registerWithEmailAndPassword(name: _nameController.text, email: _emailController.text, password: _passwordController.text,  phoneNumber: _phoneController.text);
     if (user != null) {
       print("user created successfully");
       Navigator.pushNamed(context, '/home');
