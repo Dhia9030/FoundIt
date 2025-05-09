@@ -115,7 +115,7 @@ class _HomePageState extends State<HomePage> {
 
   final List<Widget> _pages = [
     const Center(child: Text('Search Page')), // Index 0: Search
-    HomeScreen(), // Index 1: Home
+    const FoundItemsMapPage(), // Index 1: Home
     const NotificationsScreen(), // Index 2: Notifications
     const Center(child: Text('Profile Page')),
     const Center(child: Text('Register')), // Index 3: Profile

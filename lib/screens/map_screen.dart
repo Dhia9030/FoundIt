@@ -27,7 +27,7 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
     itemName: 'Black Leather Wallet',
     description: 'Found near central park bench, contains ID cards',
     foundDate: DateTime(2024, 3, 15, 14, 30),
-    photo: "assets/images/facebook_logo.png",
+    photo: "assets/images/google_logo.png",
     type: Category.clothing, // Assuming Category enum exists
     color: 'Black',
     date: DateTime(2024, 3, 15),
@@ -50,7 +50,7 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
       // Your dummy data
       print('initializing map data...');
       final List<FoundItemPopulated> items = [itemPopulated]; // Empty array for testing
-      _itemMarkers = await _createItemMarkers(items);
+      _itemMarkers = await _createItemMarkers(context, items);
 
       // Wait for the first frame to complete
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -77,7 +77,9 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
     }
   }
 
-  Future<List<Marker>> _createItemMarkers(List<FoundItemPopulated> items) async {
+  Future<List<Marker>> _createItemMarkers(
+      BuildContext context, List<FoundItemPopulated> items) async
+  {
     final markers = <Marker>[];
 
     for (final item in items) {
@@ -85,31 +87,37 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
         markers.add(
           Marker(
             point: LatLng(item.latitude, item.longitude),
-            width: 60,
-            height: 60,
+            width: 50,
+            height: 50,
             child: GestureDetector(
               onTap: () => _showItemDetails(context, item),
               child: Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: const [
                     BoxShadow(
                       color: Colors.black26,
-                      blurRadius: 5,
+                      blurRadius: 4,
                       offset: Offset(0, 2),
-                    )
+                    ),
                   ],
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: item.photo.isNotEmpty
-                      ? ImageFromBackend(
-                    blobName: item.photo,
+                child: ClipOval(
+                  child: Image.asset(
+                    item.photo.isNotEmpty ? item.photo : 'assets/images/facebook_logo.png',
                     fit: BoxFit.cover,
-                  )
-                      : Container(
-                    color: Colors.grey[200],
-                    child: Icon(Icons.help_outline, color: Colors.grey[600]),
+                    errorBuilder: (context, error, stackTrace) {
+                      print('Error loading image for item ${item.itemId}: $error');
+                      return Container(
+                        color: Colors.grey[200],
+                        child: const Icon(
+                          Icons.broken_image,
+                          color: Colors.grey,
+                          size: 30,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
@@ -129,6 +137,7 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
       builder: (context) => ItemDetailsPreview(item: item),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
