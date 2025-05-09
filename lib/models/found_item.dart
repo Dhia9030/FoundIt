@@ -1,9 +1,12 @@
 
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:foundita/models/item.dart';
 
 class FoundItem extends Item {
   final DateTime foundDate;
+  CollectionReference get _locationsCollection =>
+      FirebaseFirestore.instance.collection('locations');
   
   FoundItem({
     required String itemId,
@@ -78,4 +81,116 @@ class FoundItem extends Item {
       foundDate: foundDate ?? this.foundDate,
     );
   }
+  Future<FoundItemPopulated> convertTo() async {
+    final locationDoc =
+    await _locationsCollection.doc(locationId).get();
+    final locationData = locationDoc.data() as Map<String, dynamic>;
+
+    return FoundItemPopulated(
+      itemId: itemId,
+      itemName: itemName,
+      type: type,
+      description: description,
+      color: color,
+      date: date,
+      photo: photo,
+      isFound: isFound,
+      locationId: locationId,
+      userId: userId,
+      foundDate: foundDate,
+      latitude: locationData['latitude'],
+      longitude: locationData['longitude'],
+    );
+  }
+
+}
+
+class FoundItemPopulated extends ItemPopulated {
+  final DateTime foundDate;
+
+
+  FoundItemPopulated({
+    required String itemId,
+    required String itemName,
+    required Category type,
+    required String description,
+    required String color,
+    required DateTime date,
+    required String photo,
+    bool isFound = false,
+    required String locationId,
+    required String userId, // Added userId parameter
+    required this.foundDate,
+    required double latitude,
+    required double longitude,
+  }) : super(
+    itemId: itemId,
+    itemName: itemName,
+    type: type,
+    description: description,
+    color: color,
+    date: date,
+    photo: photo,
+    isFound: isFound,
+    locationId: locationId,
+    latitude: latitude,
+    longitude: longitude,
+    userId: userId, // Pass userId to super constructor
+  );
+
+  @override
+  Map<String, dynamic> toJson() => {
+    ...super.toJson(),
+    'foundDate': foundDate.toIso8601String(),
+  };
+
+  factory FoundItemPopulated.fromJson(Map<String, dynamic> json) => FoundItemPopulated(
+    itemId: json['itemId'],
+    itemName: json['itemName'],
+    type: Category.values.firstWhere((e) => e.name == json['type']),
+    description: json['description'],
+    color: json['color'],
+    date: DateTime.parse(json['date']),
+    photo: json['photo'],
+    isFound: json['isFound'] ?? false,
+    locationId: json['locationId'],
+    userId: json['userId'], // Extract userId from JSON
+    foundDate: DateTime.parse(json['foundDate']),
+    latitude: json['latitude'],
+    longitude: json['longitude'],
+  );
+
+  // Add copyWith method to FoundItem similar to LostItem
+  FoundItemPopulated copyWith({
+    String? itemId,
+    String? itemName,
+    Category? type,
+    String? description,
+    String? color,
+    DateTime? date,
+    String? photo,
+    bool? isFound,
+    String? locationId,
+    String? userId, // Added userId parameter
+    DateTime? foundDate,
+    double? latitude,
+    double? longitude,
+  }) {
+    return FoundItemPopulated(
+      itemId: itemId ?? this.itemId,
+      itemName: itemName ?? this.itemName,
+      type: type ?? this.type,
+      description: description ?? this.description,
+      color: color ?? this.color,
+      date: date ?? this.date,
+      photo: photo ?? this.photo,
+      isFound: isFound ?? this.isFound,
+      locationId: locationId ?? this.locationId,
+      userId: userId ?? this.userId, // Handle userId in copyWith
+      foundDate: foundDate ?? this.foundDate,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+    );
+  }
+
 }

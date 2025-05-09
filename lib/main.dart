@@ -47,22 +47,16 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        Provider<LocationService>(create: (_) => LocationService()),
+        Provider<FoundItemService>(create: (context) => FoundItemService(locationService: Provider.of<LocationService>(context, listen: false))),
         ChangeNotifierProvider(create: (context) => ThemeProvider()),
         ChangeNotifierProvider(create: (context) => ItemProvider()),
         ChangeNotifierProvider(create: (context) => ConversationProvider()),
         ChangeNotifierProvider(
           create: (context) => RegisterProvider(regService: RegisterService()),
         ),
-          ChangeNotifierProvider(
-      create: (context) => LoginProvider(loginService: LoginService()),
-    ),
-     ChangeNotifierProvider(
-          create: (context) => UserManagementProvider(
-            userManagementService: UserManagementService(),
-          ),
-
-
-),
+        ChangeNotifierProvider(create: (context) => LoginProvider(loginService: LoginService()),),
+        ChangeNotifierProvider(create: (context) => UserManagementProvider(userManagementService: UserManagementService(),),),
         ChangeNotifierProvider(
           create: (context) => LostItemProvider(
             lostItemService: LostItemService(locationService: LocationService()),
@@ -71,28 +65,12 @@ void main() async {
         ChangeNotifierProvider(
           create: (context) => LocationProvider(locationService: LocationService()),
         ),
-        ChangeNotifierProxyProvider<LocationProvider, FoundItemProvider>(
-  create: (context) => FoundItemProvider(
-    foundItemService: FoundItemService(locationService: LocationService()),
-    locationProvider: Provider.of<LocationProvider>(context, listen: false),
-  ),
-  update: (context, locationProvider, previous) => FoundItemProvider(
-    foundItemService: FoundItemService(locationService: LocationService()),
-    locationProvider: locationProvider,
-  ),
-),
-        ChangeNotifierProvider(
-          create: (context) => UserManagementProvider(
-            userManagementService: UserManagementService(),
-          ),
-        ),
-
+        ChangeNotifierProxyProvider<LocationProvider, FoundItemProvider>(create: (context) => FoundItemProvider(foundItemService: FoundItemService(locationService: LocationService()),locationProvider: Provider.of<LocationProvider>(context, listen: false),),update: (context, locationProvider, previous) => FoundItemProvider(foundItemService: FoundItemService(locationService: LocationService()),locationProvider: locationProvider,),),
+        ChangeNotifierProvider(create: (context) => UserManagementProvider(userManagementService: UserManagementService(),),),
 
       ],
-      child: const MyApp(),
-    ),
-  );
-}
+      child: const MyApp(),));
+  }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -110,7 +88,7 @@ class MyApp extends StatelessWidget {
         '/profile': (context) => const HomePage(initialTabIndex: 3),
         '/report-lost': (context) => const DescribeItemScreen(),
         '/register': (context) => RegistrationScreen(),
-        '/login': (context) => LoginScreen(),
+        '/login': (context) => const LoginScreen(),
         '/report-lost-test': (context) => const ReportLostItemScreen(),
         '/user-management': (context) => const UserManagementScreen(),
         '/map-picker': (context) => const MapPickerScreen(),

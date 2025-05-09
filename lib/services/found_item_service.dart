@@ -25,6 +25,8 @@ class FoundItemService {
   final String _uploadapiKey = dotenv.env['UPLOAD_API_KEY']!;
   CollectionReference get _foundItemsCollection =>
       _firestore.collection('foundItems');
+  CollectionReference get _locationsCollection =>
+      _firestore.collection('locations');
 
   FoundItemService({required LocationService locationService})
       : _locationService = locationService;
@@ -174,6 +176,20 @@ class FoundItemService {
     try {
       final snapshot = await _foundItemsCollection.get();
       return snapshot.docs.map((doc) => FoundItem.fromJson(doc.data() as Map<String, dynamic>)).toList();
+      
+    } catch (e) {
+      print('❌ Error fetching all found items: $e');
+      rethrow;
+    }
+  }
+  
+  Future<List<FoundItemPopulated>> getAllPopulatedFoundItems() async
+  {
+    try {
+      final snapshot = await _foundItemsCollection.get();
+      final items_list = snapshot.docs.map((doc) => FoundItem.fromJson(doc.data() as Map<String, dynamic>)).toList();
+      final List<FoundItemPopulated> items_populated = await Future.wait(items_list.map((item) => item.convertTo()));
+      return items_populated;
     } catch (e) {
       print('❌ Error fetching all found items: $e');
       rethrow;
