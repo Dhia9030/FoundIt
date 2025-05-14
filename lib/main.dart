@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:foundita/firebase_options.dart';
 import 'package:foundita/providers/found_item_provider.dart';
 import 'package:foundita/providers/location_provider.dart';
+import 'package:foundita/screens/chat_screen.dart';
 import 'package:foundita/screens/map_picker_screen.dart';
 import 'package:foundita/screens/map_screen.dart';
 import 'package:foundita/screens/register_screen.dart';
@@ -31,19 +32,23 @@ import 'services/register_service.dart';
 import 'services/login_service.dart';
 import 'screens/report_lost_test.dart';
 import 'providers/lost_item_provider.dart';
-
+import 'services/profile_service.dart'; // Import ProfileService
+import 'providers/profile_provider.dart'; // Import ProfileProvider
+import 'screens/profile_screen.dart'; // Import ProfileScreen
+import 'package:foundita/providers/dashboard_provider.dart';
+import 'package:foundita/services/dashboard_service.dart';
+import 'package:foundita/screens/dashboard_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Connect to Firebase Emulators (for local testing)
-  // if (kDebugMode) {
-    //await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
-    //FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
-  //}
   await dotenv.load(fileName: '.env');
+
+  // Create the LocationService instance once
+  final locationService = LocationService();
+
   runApp(
     MultiProvider(
       providers: [
@@ -55,19 +60,51 @@ void main() async {
         ChangeNotifierProvider(
           create: (context) => RegisterProvider(regService: RegisterService()),
         ),
-        ChangeNotifierProvider(create: (context) => LoginProvider(loginService: LoginService()),),
-        ChangeNotifierProvider(create: (context) => UserManagementProvider(userManagementService: UserManagementService(),),),
+        ChangeNotifierProvider(
+          create: (context) => LoginProvider(loginService: LoginService()),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => UserManagementProvider(
+            userManagementService: UserManagementService(),
+          ),
+        ),
+        // Provide LocationService
+        ChangeNotifierProvider(
+          create: (context) => LocationProvider(locationService: locationService),
+        ),
+        // Now, providers that depend on LocationService can access it
         ChangeNotifierProvider(
           create: (context) => LostItemProvider(
-            lostItemService: LostItemService(locationService: LocationService()),
+            lostItemService: LostItemService(locationService: locationService),
+          ),
+        ),
+        ChangeNotifierProxyProvider<LocationProvider, FoundItemProvider>(
+          create: (context) => FoundItemProvider(
+            foundItemService: FoundItemService(locationService: locationService),
+            locationProvider: Provider.of<LocationProvider>(context, listen: false),
+          ),
+          update: (context, locationProvider, previous) => FoundItemProvider(
+            foundItemService: FoundItemService(locationService: locationService),
+            locationProvider: locationProvider,
           ),
         ),
         ChangeNotifierProvider(
-          create: (context) => LocationProvider(locationService: LocationService()),
+          create: (context) => UserManagementProvider(
+            userManagementService: UserManagementService(),
+          ),
         ),
-        ChangeNotifierProxyProvider<LocationProvider, FoundItemProvider>(create: (context) => FoundItemProvider(foundItemService: FoundItemService(locationService: LocationService()),locationProvider: Provider.of<LocationProvider>(context, listen: false),),update: (context, locationProvider, previous) => FoundItemProvider(foundItemService: FoundItemService(locationService: LocationService()),locationProvider: locationProvider,),),
-        ChangeNotifierProvider(create: (context) => UserManagementProvider(userManagementService: UserManagementService(),),),
-
+        Provider<ProfileService>( // Add ProfileService
+          create: (context) => ProfileService(),
+        ),
+        ChangeNotifierProvider<ProfileProvider>( // Add ProfileProvider
+          create: (context) => ProfileProvider(profileService: context.read<ProfileService>()),
+        ),
+        Provider(create: (_) => AdminDashboardService()),
+    ChangeNotifierProvider(
+      create: (context) => DashboardProvider(
+        adminDashboardService: context.read<AdminDashboardService>(),
+      ),
+    ),
       ],
       child: const MyApp(),));
   }
@@ -85,7 +122,7 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const HomePage(initialTabIndex: 1),
         '/search': (context) => const HomePage(initialTabIndex: 0),
         '/notifications': (context) => const HomePage(initialTabIndex: 2),
-        '/profile': (context) => const HomePage(initialTabIndex: 3),
+        '/profile': (context) => const ProfileScreen(), // Add ProfileScreen route
         '/report-lost': (context) => const DescribeItemScreen(),
         '/register': (context) => RegistrationScreen(),
         '/login': (context) => const LoginScreen(),
@@ -94,7 +131,11 @@ class MyApp extends StatelessWidget {
         '/map-picker': (context) => const MapPickerScreen(),
         '/report-found': (context) => ReportFoundItemScreen(),
         '/map': (context) => const FoundItemsMapPage(),
-
+        '/dashboard': (context) => const DashboardScreen(),
+         '/chat': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return ChatScreen(otherUserId: args['otherUserId']);
+        },
       },
     );
   }
@@ -131,7 +172,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Handle route arguments if any
     final routeArgs = ModalRoute.of(context)?.settings.arguments;
     if (routeArgs is int) {
       setState(() {
@@ -152,7 +192,6 @@ class _HomePageState extends State<HomePage> {
       if (_isMenuOpen) _toggleMenu();
     });
 
-    // Navigate to the corresponding route
     switch (index) {
       case 0:
         Navigator.pushNamed(context, '/search');
@@ -164,7 +203,7 @@ class _HomePageState extends State<HomePage> {
         Navigator.pushNamed(context, '/notifications');
         break;
       case 3:
-        Navigator.pushNamed(context, '/profile');
+        Navigator.pushNamed(context, '/profile'); // Navigate to profile route
         break;
       case 4:
         Navigator.pushNamed(context, '/register');
@@ -195,7 +234,6 @@ class _HomePageState extends State<HomePage> {
         onTap: _handleNavTap,
       ),
     );
-
   }
 }
 
@@ -209,19 +247,14 @@ class AuthWrapper extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: auth.authStateChanges(),
       builder: (context, snapshot) {
-        // Show loading indicator while checking auth state
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
-
-        // User is logged in - show the app
         if (snapshot.hasData) {
           return const HomePage();
         }
-
-        // User is not logged in - show login screen
         return const LoginScreen();
       },
     );
