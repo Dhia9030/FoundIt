@@ -195,4 +195,63 @@ class FoundItemService {
       rethrow;
     }
   }
+
+  Future<List<FoundItemPopulated>> getPopulatedItemsByLocation(String targetLocationId) async {
+    try {
+      // 1. Get the target location first
+      final targetLocation = await _locationService.getLocationById(targetLocationId);
+      if (targetLocation == null) {
+        throw Exception('Target location not found');
+      }
+      if (targetLocation.latitude == null || targetLocation.longitude == null) {
+        throw Exception('Target location coordinates are missing');
+      }
+
+      // 2. Get all items safely
+      final itemsSnapshot = await _foundItemsCollection.get();
+      final itemLocationIds = await getAllFoundItems().then((items) => items.map((item) => item.locationId).toSet());
+
+      // 4. Get all related locations in one batch
+      final locations = await Future.wait(
+          itemLocationIds.map((id) => _locationService.getLocationById(id!))
+      );
+
+      // 5. Create location map for quick lookup
+      final locationMap = {
+        for (var loc in locations.whereType<Location>()) loc.id: loc
+      };
+
+      // 6. Filter items that have locations within 50km
+      final filteredItems = itemsSnapshot.docs.where((doc) {
+        final item = FoundItem.fromJson(doc.data() as Map<String, dynamic>);
+        final itemLocation = locationMap[item.locationId];
+
+        if (itemLocation == null ||
+            itemLocation.latitude == null ||
+            itemLocation.longitude == null) return false;
+
+        final distance = Geolocator.distanceBetween(
+          targetLocation.latitude,
+          targetLocation.longitude,
+          itemLocation.latitude!,
+          itemLocation.longitude!,
+        );
+
+        return distance < 50;
+      }).toList();
+
+      // 7. Convert to populated items
+      final List<FoundItemPopulated> populatedItems = await Future.wait(
+          filteredItems.map((doc) async {
+            final item = FoundItem.fromJson(doc.data() as Map<String, dynamic>);
+            return item.convertTo();
+          })
+      );
+
+      return populatedItems;
+    } catch (e) {
+      print('❌ Error fetching nearby items: $e');
+      rethrow;
+    }
+  }
 }

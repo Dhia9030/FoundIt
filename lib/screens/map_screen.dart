@@ -21,6 +21,9 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
   final MapController _mapController = MapController();
   List<Marker> _itemMarkers = [];
   bool _isLoading = true;
+  String? _selectedSearchType;
+
+
 
   final FoundItemPopulated itemPopulated = FoundItemPopulated(
     itemId: 'test_12345',
@@ -45,10 +48,21 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
     print('initial');
   }
 
+  void _handleSearchTypeChange(String? newValue) {
+    if (newValue == null) return;
+
+    setState(() {
+      _selectedSearchType = newValue;
+      _isLoading = true; // Show loading indicator
+    });
+
+    _initializeMapData(); // Refetch data with new filter
+  }
+
   Future<void> _initializeMapData() async {
     try {
       // Your dummy data
-      print('initializing map data...');
+      print('Fetching data for filter: $_selectedSearchType');
       final List<FoundItemPopulated> items = [itemPopulated]; // Empty array for testing
       _itemMarkers = await _createItemMarkers(context, items);
 
@@ -171,6 +185,67 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
               MarkerLayer(markers: _itemMarkers),
             ],
           ),
+          Positioned(
+            top: 20,
+            left: 20,
+            right: 20,
+            child: Container(
+              height: 50,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(8.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  DropdownButton<String>(
+                    value: _selectedSearchType ?? 'ariana', // Fallback to 'ariana' if null
+                    icon: const Icon(Icons.arrow_drop_down),
+                    underline: const SizedBox(),
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'ariana',
+                        child: Text('Ariana'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'tunis',
+                        child: Text('Tunis'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'beja',
+                        child: Text('Beja'),
+                      ),
+                    ],
+                    onChanged: _handleSearchTypeChange, // Connect to your handler
+                  ),
+                  const VerticalDivider(width: 1),
+                  Expanded(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Search for a place...',
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.search),
+                    onPressed: () {
+                      // Handle search
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
           if (_itemMarkers.isEmpty)
             Center(
               child: Container(
@@ -203,11 +278,17 @@ class ItemDetailsPreview extends StatelessWidget {
         children: [
           Text(item.itemName, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 10),
-          if (item.photo.isNotEmpty)
-            SizedBox(
-              height: 150,
-              child: ImageFromBackend(blobName: item.photo, fit: BoxFit.cover),
-            ),
+          // if (item.photo.isNotEmpty)
+          //   SizedBox(
+          //     height: 150,
+          //     child: ImageFromBackend(blobName: item.photo, fit: BoxFit.cover),
+          //   ),
+          Row(
+            children: [
+              SizedBox(child: Image.asset("assets/images/google_logo.png"), height: 60,width: 60,),
+              SizedBox(child: Image.asset("assets/images/google_logo.png"), height: 60,width: 60,),
+            ],
+          ),
           const SizedBox(height: 10),
           Text(item.description, style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 10),
