@@ -106,6 +106,9 @@ void main() async {
       ),
     ),
       ],
+      child: const MyApp(),
+    ),
+      ],
       child: const MyApp(),));
   }
 
@@ -156,11 +159,11 @@ class _HomePageState extends State<HomePage> {
 
   final List<Widget> _pages = [
     const Center(child: Text('Search Page')), // Index 0: Search
-    const FoundItemsMapPage(), // Index 1: Home
-    const NotificationsScreen(), // Index 2: Notifications
-    const Center(child: Text('Profile Page')),
-    const Center(child: Text('Register')), // Index 3: Profile
-    const Center(child: Text('Login'))
+    HomeScreen(), // Index 1: Home
+    //const NotificationsScreen(), Index 2: Notifications
+    const ProfileScreen(), // Index 3: Profile - Changed to the actual ProfileScreen
+    const Center(child: Text('Register')), // Index 4: Register
+    const Center(child: Text('Login')) // Index 5: Login
   ];
 
   @override
