@@ -47,13 +47,33 @@ void main() async {
   await dotenv.load(fileName: '.env');
 
   // Create the LocationService instance once
-  final locationService = LocationService();
+
 
   runApp(
     MultiProvider(
       providers: [
         Provider<LocationService>(create: (_) => LocationService()),
-        Provider<FoundItemService>(create: (context) => FoundItemService(locationService: Provider.of<LocationService>(context, listen: false))),
+
+        ProxyProvider<LocationService, FoundItemService>(
+          update: (_, locationService, __) => FoundItemService(locationService: locationService),
+        ),
+
+        ChangeNotifierProxyProvider<LocationService, LocationProvider>(
+          create: (_) => LocationProvider(locationService: LocationService()), // temporary dummy
+          update: (_, locationService, __) => LocationProvider(locationService: locationService),
+        ),
+
+        ChangeNotifierProxyProvider2<FoundItemService, LocationProvider, FoundItemProvider>(
+          create: (_) => FoundItemProvider(
+            foundItemService: FoundItemService(locationService: LocationService()), // temporary dummy
+            locationProvider: LocationProvider(locationService: LocationService()),
+          ),
+          update: (_, foundItemService, locationProvider, __) =>
+              FoundItemProvider(
+                foundItemService: foundItemService,
+                locationProvider: locationProvider,
+              ),
+        ),
         ChangeNotifierProvider(create: (context) => ThemeProvider()),
         ChangeNotifierProvider(create: (context) => ItemProvider()),
         ChangeNotifierProvider(create: (context) => ConversationProvider()),
@@ -69,25 +89,25 @@ void main() async {
           ),
         ),
         // Provide LocationService
-        ChangeNotifierProvider(
-          create: (context) => LocationProvider(locationService: locationService),
-        ),
+        // ChangeNotifierProvider(
+        //   create: (context) => LocationProvider(locationService: locationService),
+        // ),
         // Now, providers that depend on LocationService can access it
         ChangeNotifierProvider(
           create: (context) => LostItemProvider(
-            lostItemService: LostItemService(locationService: locationService),
+            lostItemService: LostItemService(locationService: context.read<LocationService>(),),
           ),
         ),
-        ChangeNotifierProxyProvider<LocationProvider, FoundItemProvider>(
-          create: (context) => FoundItemProvider(
-            foundItemService: FoundItemService(locationService: locationService),
-            locationProvider: Provider.of<LocationProvider>(context, listen: false),
-          ),
-          update: (context, locationProvider, previous) => FoundItemProvider(
-            foundItemService: FoundItemService(locationService: locationService),
-            locationProvider: locationProvider,
-          ),
-        ),
+        // ChangeNotifierProxyProvider<LocationProvider, FoundItemProvider>(
+        //   create: (context) => FoundItemProvider(
+        //     foundItemService: FoundItemService(locationService: locationService),
+        //     locationProvider: Provider.of<LocationProvider>(context, listen: false),
+        //   ),
+        //   update: (context, locationProvider, previous) => FoundItemProvider(
+        //     foundItemService: FoundItemService(locationService: locationService),
+        //     locationProvider: locationProvider,
+        //   ),
+        // ),
         ChangeNotifierProvider(
           create: (context) => UserManagementProvider(
             userManagementService: UserManagementService(),
@@ -106,10 +126,8 @@ void main() async {
       ),
     ),
       ],
-      child: const MyApp(),
-    ),
-      ],
-      child: const MyApp(),));
+      child: const MyApp()));
+
   }
 
 class MyApp extends StatelessWidget {
@@ -159,7 +177,7 @@ class _HomePageState extends State<HomePage> {
 
   final List<Widget> _pages = [
     const Center(child: Text('Search Page')), // Index 0: Search
-    HomeScreen(), // Index 1: Home
+    const FoundItemsMapPage(), // Index 1: Home
     //const NotificationsScreen(), Index 2: Notifications
     const ProfileScreen(), // Index 3: Profile - Changed to the actual ProfileScreen
     const Center(child: Text('Register')), // Index 4: Register

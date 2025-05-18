@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:foundita/models/item.dart';
+import 'package:foundita/providers/found_item_provider.dart';
 import 'package:foundita/services/found_item_service.dart';
+import 'package:foundita/services/location_service.dart';
 import 'package:foundita/widgets/image_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
@@ -20,8 +22,9 @@ class FoundItemsMapPage extends StatefulWidget {
 class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
   final MapController _mapController = MapController();
   List<Marker> _itemMarkers = [];
-  bool _isLoading = true;
   String? _selectedSearchType;
+  late final FoundItemProvider _foundItemsProvider;
+
 
 
 
@@ -40,20 +43,45 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
     longitude: -73.968285,
     isFound: true,
   );
+  final FoundItemPopulated itemPopulated2 = FoundItemPopulated(
+    itemId: 'test_12345',
+    itemName: 'Black Leather Wallet',
+    description: 'Found near central park bench, contains ID cards',
+    foundDate: DateTime(2024, 3, 15, 14, 30),
+    photo: "assets/images/facebook_logo.png",
+    type: Category.clothing, // Assuming Category enum exists
+    color: 'Black',
+    date: DateTime(2024, 3, 15),
+    locationId: 'loc_nyc_123',
+    userId: 'user_john_doe',
+    latitude: 41.785091, // Central Park coordinates
+    longitude: -72.968285,
+    isFound: true,
+  );
 
   @override
   void initState() {
     super.initState();
-    _initializeMapData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _foundItemsProvider = Provider.of<FoundItemProvider>(context, listen: false);
+      _initializeMapData();
+    });
     print('initial');
   }
 
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   _foundItemsProvider = Provider.of<FoundItemProvider>(context, listen: false);
+  //   _initializeMapData();
+  // }
+
   void _handleSearchTypeChange(String? newValue) {
+    print('Search type changed to: $newValue');
     if (newValue == null) return;
 
     setState(() {
       _selectedSearchType = newValue;
-      _isLoading = true; // Show loading indicator
     });
 
     _initializeMapData(); // Refetch data with new filter
@@ -63,7 +91,12 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
     try {
       // Your dummy data
       print('Fetching data for filter: $_selectedSearchType');
-      final List<FoundItemPopulated> items = [itemPopulated]; // Empty array for testing
+      // final List<FoundItemPopulated> items = [itemPopulated2, itemPopulated]; // Empty array for testing
+      await _foundItemsProvider.fetchPopulatedItems();
+
+      final items = _foundItemsProvider.populatedItems; // Access the fetched data
+      print("the found items are :\n");
+      print(items);
       _itemMarkers = await _createItemMarkers(context, items);
 
       // Wait for the first frame to complete
@@ -86,7 +119,7 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isLoading = false);
+        //TODO: deleted setState isLoading
       }
     }
   }
@@ -157,7 +190,7 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Found Items Map')),
-      body: _isLoading
+      body: context.watch<FoundItemProvider>().isLoading
           ? const Center(child: CircularProgressIndicator())
           : Stack(
         children: [

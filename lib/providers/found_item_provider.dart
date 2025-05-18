@@ -1,7 +1,6 @@
 import 'dart:io' as io;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter/material.dart';
@@ -21,16 +20,18 @@ class FoundItemProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   List<FoundItem> _foundItems = [];
+  List<FoundItemPopulated> _populatedItems = [];
 
-  FoundItemProvider(
-      {required FoundItemService foundItemService,
-      required LocationProvider locationProvider})
-      : _foundItemService = foundItemService,
+  FoundItemProvider({
+    required FoundItemService foundItemService,
+    required LocationProvider locationProvider,
+  })  : _foundItemService = foundItemService,
         _locationProvider = locationProvider;
 
   bool get isLoading => _isLoading;
   String? get error => _error;
   List<FoundItem> get foundItems => _foundItems;
+  List<FoundItemPopulated> get populatedItems => _populatedItems;
 
   Future<bool> reportFoundItem({
     required String userId,
@@ -43,7 +44,8 @@ class FoundItemProvider with ChangeNotifier {
     required double latitude,
     required double longitude,
     required DateTime foundDate,
-  }) async {
+  }) async
+  {
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -96,6 +98,34 @@ class FoundItemProvider with ChangeNotifier {
     notifyListeners();
     try {
       _foundItems = await _foundItemService.getAllFoundItems();
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchPopulatedItems() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      _populatedItems = await _foundItemService.getAllPopulatedFoundItems();
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchPopulatedItemsByLocation(String locationId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      _populatedItems = await _foundItemService.getPopulatedItemsByLocation(locationId);
     } catch (e) {
       _error = e.toString();
     } finally {
