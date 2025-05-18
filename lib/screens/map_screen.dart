@@ -17,16 +17,12 @@ class FoundItemsMapPage extends StatefulWidget {
   State<FoundItemsMapPage> createState() => _FoundItemsMapPageState();
 }
 
-
-
 class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
   final MapController _mapController = MapController();
   List<Marker> _itemMarkers = [];
+  bool _isLoading = true;
   String? _selectedSearchType;
   late final FoundItemProvider _foundItemsProvider;
-
-
-
 
   final FoundItemPopulated itemPopulated = FoundItemPopulated(
     itemId: 'test_12345',
@@ -34,27 +30,28 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
     description: 'Found near central park bench, contains ID cards',
     foundDate: DateTime(2024, 3, 15, 14, 30),
     photo: "assets/images/google_logo.png",
-    type: Category.clothing, // Assuming Category enum exists
+    type: Category.clothing,
     color: 'Black',
     date: DateTime(2024, 3, 15),
     locationId: 'loc_nyc_123',
     userId: 'user_john_doe',
-    latitude: 40.785091, // Central Park coordinates
+    latitude: 40.785091,
     longitude: -73.968285,
     isFound: true,
   );
+
   final FoundItemPopulated itemPopulated2 = FoundItemPopulated(
-    itemId: 'test_12345',
+    itemId: 'test_67890',
     itemName: 'Black Leather Wallet',
     description: 'Found near central park bench, contains ID cards',
     foundDate: DateTime(2024, 3, 15, 14, 30),
     photo: "assets/images/facebook_logo.png",
-    type: Category.clothing, // Assuming Category enum exists
+    type: Category.clothing,
     color: 'Black',
     date: DateTime(2024, 3, 15),
     locationId: 'loc_nyc_123',
     userId: 'user_john_doe',
-    latitude: 41.785091, // Central Park coordinates
+    latitude: 41.785091,
     longitude: -72.968285,
     isFound: true,
   );
@@ -66,52 +63,34 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
       _foundItemsProvider = Provider.of<FoundItemProvider>(context, listen: false);
       _initializeMapData();
     });
-    print('initial');
   }
 
-  // @override
-  // void didChangeDependencies() {
-  //   super.didChangeDependencies();
-  //   _foundItemsProvider = Provider.of<FoundItemProvider>(context, listen: false);
-  //   _initializeMapData();
-  // }
-
   void _handleSearchTypeChange(String? newValue) {
-    print('Search type changed to: $newValue');
     if (newValue == null) return;
-
     setState(() {
       _selectedSearchType = newValue;
+      _isLoading = true;
     });
-
-    _initializeMapData(); // Refetch data with new filter
+    _initializeMapData();
   }
 
   Future<void> _initializeMapData() async {
     try {
-      // Your dummy data
-      print('Fetching data for filter: $_selectedSearchType');
-      // final List<FoundItemPopulated> items = [itemPopulated2, itemPopulated]; // Empty array for testing
+      final List<FoundItemPopulated> items = [itemPopulated2, itemPopulated];
       await _foundItemsProvider.fetchPopulatedItems();
+      final List<FoundItemPopulated> fetchedItems = _foundItemsProvider.populatedItems;
+      _itemMarkers = await _createItemMarkers(context, fetchedItems);
 
-      final items = _foundItemsProvider.populatedItems; // Access the fetched data
-      print("the found items are :\n");
-      print(items);
-      _itemMarkers = await _createItemMarkers(context, items);
-
-      // Wait for the first frame to complete
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          // If there are markers, center on the first one; otherwise, use default location
           if (_itemMarkers.isNotEmpty) {
             _mapController.move(_itemMarkers.first.point, 12.0);
           } else {
-            _mapController.move(LatLng(36.8065, 10.1815), 10.0); // Default center
+            _mapController.move(LatLng(36.8065, 10.1815), 10.0);
           }
         }
       });
     } catch (e) {
-      print('Error initializing map data: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}')),
@@ -119,16 +98,13 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
       }
     } finally {
       if (mounted) {
-        //TODO: deleted setState isLoading
+        setState(() => _isLoading = false);
       }
     }
   }
 
-  Future<List<Marker>> _createItemMarkers(
-      BuildContext context, List<FoundItemPopulated> items) async
-  {
+  Future<List<Marker>> _createItemMarkers(BuildContext context, List<FoundItemPopulated> items) async {
     final markers = <Marker>[];
-
     for (final item in items) {
       try {
         markers.add(
@@ -137,34 +113,23 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
             width: 50,
             height: 50,
             child: GestureDetector(
-              onTap: () => _showItemDetails(context, item),
+              onTap: () => _showItemDetailsModal(context, item),
               child: Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 2),
                   boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
+                    BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
                   ],
                 ),
                 child: ClipOval(
                   child: Image.asset(
                     item.photo.isNotEmpty ? item.photo : 'assets/images/facebook_logo.png',
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      print('Error loading image for item ${item.itemId}: $error');
-                      return Container(
-                        color: Colors.grey[200],
-                        child: const Icon(
-                          Icons.broken_image,
-                          color: Colors.grey,
-                          size: 30,
-                        ),
-                      );
-                    },
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.broken_image, color: Colors.grey, size: 30),
+                    ),
                   ),
                 ),
               ),
@@ -178,19 +143,94 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
     return markers;
   }
 
-  void _showItemDetails(BuildContext context, FoundItemPopulated item) {
+  void _showItemDetailsModal(BuildContext context, FoundItemPopulated item) {
     showModalBottomSheet(
       context: context,
-      builder: (context) => ItemDetailsPreview(item: item),
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.45,
+        minChildSize: 0.45,
+        maxChildSize: 0.45,
+        expand: false,
+        builder: (context, scrollController) => Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(item.itemName, style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Image.asset("assets/images/google_logo.png", height: 60, width: 60),
+                  const SizedBox(width: 10),
+                  Image.asset("assets/images/google_logo.png", height: 60, width: 60),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(item.description, style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(height: 10),
+              Text('Found on: ${DateFormat.yMMMd().format(item.foundDate)}'),
+              const Spacer(),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => _showClaimItemDialog(context),
+                  child: const Text('Claim This Item'),
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
     );
   }
 
+  void _showClaimItemDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final TextEditingController _controller = TextEditingController();
+        return AlertDialog(
+          title: const Text('Describe Your Claim'),
+          content: TextField(
+            controller: _controller,
+            maxLines: 5,
+            decoration: const InputDecoration(
+              hintText: 'Describe the item and why you think it belongs to you...',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final message = _controller.text.trim();
+                if (message.isNotEmpty) {
+                  // send request logic here
+                  print("Sending claim request: $message");
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Send Request'),
+            )
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Found Items Map')),
-      body: context.watch<FoundItemProvider>().isLoading
+      body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Stack(
         children: [
@@ -239,24 +279,15 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
               child: Row(
                 children: [
                   DropdownButton<String>(
-                    value: _selectedSearchType ?? 'ariana', // Fallback to 'ariana' if null
+                    value: _selectedSearchType ?? 'ariana',
                     icon: const Icon(Icons.arrow_drop_down),
                     underline: const SizedBox(),
                     items: const [
-                      DropdownMenuItem(
-                        value: 'ariana',
-                        child: Text('Ariana'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'tunis',
-                        child: Text('Tunis'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'beja',
-                        child: Text('Beja'),
-                      ),
+                      DropdownMenuItem(value: 'ariana', child: Text('Ariana')),
+                      DropdownMenuItem(value: 'tunis', child: Text('Tunis')),
+                      DropdownMenuItem(value: 'beja', child: Text('Beja')),
                     ],
-                    onChanged: _handleSearchTypeChange, // Connect to your handler
+                    onChanged: _handleSearchTypeChange,
                   ),
                   const VerticalDivider(width: 1),
                   Expanded(
@@ -264,16 +295,13 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
                       decoration: InputDecoration(
                         hintText: 'Search for a place...',
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                       ),
                     ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.search),
-                    onPressed: () {
-                      // Handle search
-                    },
+                    onPressed: () {},
                   ),
                 ],
               ),
@@ -290,80 +318,6 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
                 ),
               ),
             ),
-        ],
-      ),
-    );
-  }
-}
-
-class ItemDetailsPreview extends StatelessWidget {
-  final FoundItemPopulated item;
-
-  const ItemDetailsPreview({super.key, required this.item});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(item.itemName, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 10),
-          // if (item.photo.isNotEmpty)
-          //   SizedBox(
-          //     height: 150,
-          //     child: ImageFromBackend(blobName: item.photo, fit: BoxFit.cover),
-          //   ),
-          Row(
-            children: [
-              SizedBox(child: Image.asset("assets/images/google_logo.png"), height: 60,width: 60,),
-              SizedBox(child: Image.asset("assets/images/google_logo.png"), height: 60,width: 60,),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(item.description, style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 10),
-          Text('Found on: ${DateFormat.yMMMd().format(item.foundDate)}'),
-        ],
-      ),
-    );
-  }
-}
-
-class TestMapPage extends StatelessWidget {
-  const TestMapPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Test Map')),
-      body: FlutterMap(
-        options: MapOptions(
-          initialCenter: LatLng(36.8065, 10.1815), // Default center: Tunis, Tunisia
-          initialZoom: 10.0,
-          onMapReady: () {
-            print('Map is ready');
-          },
-        ),
-        children: [
-          TileLayer(
-            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-            userAgentPackageName: 'com.example.foundita',
-            errorTileCallback: (tile, error, stackTrace) {
-              print('Tile loading error at ${tile.coordinates}: $error');
-            },
-            tileBuilder: (context, widget, tile) {
-              if (tile.imageInfo == null) {
-                return Container(
-                  color: Colors.grey,
-                  child: const Center(child: Text('Failed to load tile')),
-                );
-              }
-              return widget;
-            },
-          ),
         ],
       ),
     );
