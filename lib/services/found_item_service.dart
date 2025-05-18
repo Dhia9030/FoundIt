@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -23,6 +22,8 @@ class FoundItemService {
   final LocationService _locationService;
   final String _uploadImageUrl = dotenv.env['BACKEND_UPLOAD_URL']!;
   final String _uploadapiKey = dotenv.env['UPLOAD_API_KEY']!;
+  final String _storageUrl = dotenv.env['STORAGE_URL'] ?? "";
+  final String _storageApiKey = dotenv.env['STORAGE_API_KEY'] ?? "";
   CollectionReference get _foundItemsCollection =>
       _firestore.collection('foundItems');
   CollectionReference get _locationsCollection =>
@@ -252,6 +253,31 @@ class FoundItemService {
       return populatedItems;
     } catch (e) {
       print('❌ Error fetching nearby items: $e');
+      rethrow;
+    }
+  }
+
+  Future<Uint8List> getImage(String blobName) async {
+    try {
+      if (_storageUrl.isEmpty) {
+        print('❌ STORAGE_URL is not set in .env file');
+        return Uint8List(0);
+      }
+      final imageUrl = '$_storageUrl/download/$blobName';
+
+      final response = await http.get(
+        Uri.parse(imageUrl),
+        headers: {'X-API-Key': _storageApiKey});
+
+      if (response.statusCode == 200) {
+        print('image fetched with response : ${response.bodyBytes}');
+        return response.bodyBytes;
+      } else {
+        print('❌ Error fetching image: ${response.statusCode} - ${response.reasonPhrase}');
+        return Uint8List(0);
+      }
+    } catch (e) {
+      print('❌ Error fetching image from storage: $e');
       rethrow;
     }
   }

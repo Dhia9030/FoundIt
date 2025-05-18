@@ -1,3 +1,7 @@
+
+
+import 'package:flutter/foundation.dart';
+
 enum Category { electronics, clothing, documents, other, }
 
 class Item {
@@ -65,6 +69,7 @@ class ItemPopulated {
   final String userId; // Nouveau champ ajouté
   final double latitude;
   final double longitude;
+  final Uint8List imageData;
 
   ItemPopulated({
     required this.itemId,
@@ -79,6 +84,7 @@ class ItemPopulated {
     required this.userId, // Paramètre ajouté comme requis
     required this.latitude,
     required this.longitude,
+    required this.imageData,
   });
 
   Map<String, dynamic> toJson() => {
@@ -109,5 +115,6 @@ class ItemPopulated {
     userId: json['userId'], // Récupération depuis le JSON
     latitude: json['latitude'],
     longitude: json['longitude'],
+    imageData: json['imageData'],
   );
 }

@@ -1,7 +1,8 @@
-
-
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:foundita/models/item.dart';
+import 'package:foundita/services/found_item_service.dart';
+import 'package:foundita/services/location_service.dart';
 
 class FoundItem extends Item {
   final DateTime foundDate;
@@ -85,6 +86,9 @@ class FoundItem extends Item {
     final locationDoc =
     await _locationsCollection.doc(locationId).get();
     final locationData = locationDoc.data() as Map<String, dynamic>;
+    final FoundItemService _foundItemService = FoundItemService(locationService: LocationService());
+    final imageData = await _foundItemService.getImage(photo);
+
 
     return FoundItemPopulated(
       itemId: itemId,
@@ -100,6 +104,7 @@ class FoundItem extends Item {
       foundDate: foundDate,
       latitude: locationData['latitude'],
       longitude: locationData['longitude'],
+      imageData: imageData,
     );
   }
 
@@ -107,7 +112,6 @@ class FoundItem extends Item {
 
 class FoundItemPopulated extends ItemPopulated {
   final DateTime foundDate;
-
 
   FoundItemPopulated({
     required String itemId,
@@ -123,6 +127,7 @@ class FoundItemPopulated extends ItemPopulated {
     required this.foundDate,
     required double latitude,
     required double longitude,
+    required Uint8List imageData,
   }) : super(
     itemId: itemId,
     itemName: itemName,
@@ -135,7 +140,8 @@ class FoundItemPopulated extends ItemPopulated {
     locationId: locationId,
     latitude: latitude,
     longitude: longitude,
-    userId: userId, // Pass userId to super constructor
+    userId: userId,
+    imageData: imageData,
   );
 
   @override
@@ -143,6 +149,35 @@ class FoundItemPopulated extends ItemPopulated {
     ...super.toJson(),
     'foundDate': foundDate.toIso8601String(),
   };
+
+  static Future<FoundItemPopulated> fromFoundItem(FoundItem item) async {
+    final locationDoc = await FirebaseFirestore.instance
+        .collection('locations')
+        .doc(item.locationId)
+        .get();
+
+    final locationData = locationDoc.data() as Map<String, dynamic>;
+
+    final imageData =
+    await FoundItemService(locationService: LocationService()).getImage(item.photo);
+
+    return FoundItemPopulated(
+      itemId: item.itemId,
+      itemName: item.itemName,
+      type: item.type,
+      description: item.description,
+      color: item.color,
+      date: item.date,
+      photo: item.photo,
+      isFound: item.isFound,
+      locationId: item.locationId,
+      userId: item.userId,
+      foundDate: item.foundDate,
+      latitude: locationData['latitude'],
+      longitude: locationData['longitude'],
+      imageData: imageData,
+    );
+  }
 
   factory FoundItemPopulated.fromJson(Map<String, dynamic> json) => FoundItemPopulated(
     itemId: json['itemId'],
@@ -158,6 +193,7 @@ class FoundItemPopulated extends ItemPopulated {
     foundDate: DateTime.parse(json['foundDate']),
     latitude: json['latitude'],
     longitude: json['longitude'],
+    imageData: Uint8List(0),
   );
 
   // Add copyWith method to FoundItem similar to LostItem
@@ -190,6 +226,7 @@ class FoundItemPopulated extends ItemPopulated {
       foundDate: foundDate ?? this.foundDate,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      imageData: imageData ?? this.imageData,
     );
   }
 

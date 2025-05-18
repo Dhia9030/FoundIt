@@ -1,7 +1,6 @@
 import 'dart:io' as io;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter/material.dart';
 import 'package:foundita/providers/location_provider.dart';
@@ -21,6 +20,7 @@ class FoundItemProvider with ChangeNotifier {
   String? _error;
   List<FoundItem> _foundItems = [];
   List<FoundItemPopulated> _populatedItems = [];
+  Uint8List imageFile = Uint8List(0);
 
   FoundItemProvider({
     required FoundItemService foundItemService,
@@ -126,6 +126,20 @@ class FoundItemProvider with ChangeNotifier {
     notifyListeners();
     try {
       _populatedItems = await _foundItemService.getPopulatedItemsByLocation(locationId);
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchImage(String blobName) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      imageFile = await _foundItemService.getImage(blobName);
     } catch (e) {
       _error = e.toString();
     } finally {

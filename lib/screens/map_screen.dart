@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' hide Category ;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:foundita/models/item.dart';
@@ -22,6 +23,7 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
   List<Marker> _itemMarkers = [];
   bool _isLoading = true;
   String? _selectedSearchType;
+  Widget? imageWidget;
   late final FoundItemProvider _foundItemsProvider;
 
   final FoundItemPopulated itemPopulated = FoundItemPopulated(
@@ -38,6 +40,7 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
     latitude: 40.785091,
     longitude: -73.968285,
     isFound: true,
+    imageData: Uint8List(0),
   );
 
   final FoundItemPopulated itemPopulated2 = FoundItemPopulated(
@@ -54,6 +57,7 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
     latitude: 41.785091,
     longitude: -72.968285,
     isFound: true,
+    imageData: Uint8List(0),
   );
 
   @override
@@ -61,6 +65,7 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _foundItemsProvider = Provider.of<FoundItemProvider>(context, listen: false);
+
       _initializeMapData();
     });
   }
@@ -123,14 +128,18 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
                   ],
                 ),
                 child: ClipOval(
-                  child: Image.asset(
-                    item.photo.isNotEmpty ? item.photo : 'assets/images/facebook_logo.png',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: Colors.grey[200],
-                      child: const Icon(Icons.broken_image, color: Colors.grey, size: 30),
-                    ),
+                  child: Image.memory(
+                    item.imageData,
+                    fit: BoxFit.cover, // or contain / fill / etc.
                   ),
+                  // child: Image.asset(
+                  //   item.photo.isNotEmpty ? item.photo : 'assets/images/facebook_logo.png',
+                  //   fit: BoxFit.cover,
+                  //   errorBuilder: (context, error, stackTrace) => Container(
+                  //     color: Colors.grey[200],
+                  //     child: const Icon(Icons.broken_image, color: Colors.grey, size: 30),
+                  //   ),
+                  // ),
                 ),
               ),
             ),
@@ -159,29 +168,66 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
         builder: (context, scrollController) => Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(item.itemName, style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Image.asset("assets/images/google_logo.png", height: 60, width: 60),
-                  const SizedBox(width: 10),
-                  Image.asset("assets/images/google_logo.png", height: 60, width: 60),
-                ],
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    /// 🖼️ Image on the left
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.grey[200],
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Image.memory(
+                        item.imageData,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+
+                    /// 📝 Text info on the right
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.itemName,
+                            style: Theme.of(context).textTheme.titleLarge,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            item.description,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Found on: ${DateFormat.yMMMd().format(item.foundDate)}',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 10),
-              Text(item.description, style: Theme.of(context).textTheme.bodyMedium),
-              const SizedBox(height: 10),
-              Text('Found on: ${DateFormat.yMMMd().format(item.foundDate)}'),
-              const Spacer(),
+
+              /// 📦 Spacer and Claim button at bottom
+              const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () => _showClaimItemDialog(context),
+                  onPressed: () => _showClaimItemDialog(context, item),
                   child: const Text('Claim This Item'),
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -189,7 +235,8 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
     );
   }
 
-  void _showClaimItemDialog(BuildContext context) {
+
+  void _showClaimItemDialog(BuildContext context, FoundItemPopulated item) {
     showDialog(
       context: context,
       builder: (context) {
@@ -214,7 +261,7 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
                 final message = _controller.text.trim();
                 if (message.isNotEmpty) {
                   // send request logic here
-                  print("Sending claim request: $message");
+                  print("Sending claim request: $message, to user : ${item.userId}");
                   Navigator.of(context).pop();
                 }
               },
