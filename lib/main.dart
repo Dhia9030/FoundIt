@@ -45,6 +45,12 @@ void main() async {
   );
 
   await dotenv.load(fileName: '.env');
+  print('--- Debugging .env values in main.dart ---');
+  print('BACKEND_UPLOAD_URL: "${dotenv.env['BACKEND_UPLOAD_URL']}"');
+  print('UPLOAD_API_KEY: "${dotenv.env['UPLOAD_API_KEY']}"');
+  print('Is BACKEND_UPLOAD_URL null? ${dotenv.env['BACKEND_UPLOAD_URL'] == null}');
+  print('Is UPLOAD_API_KEY null? ${dotenv.env['UPLOAD_API_KEY'] == null}');
+  print('--- End .env Debug ---');
 
   // Create the LocationService instance once
   final locationService = LocationService();
