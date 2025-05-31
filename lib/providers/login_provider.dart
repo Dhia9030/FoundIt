@@ -93,7 +93,7 @@ class LoginProvider with ChangeNotifier {
           final userData = userDoc.data() as Map<String, dynamic>;
           if (userData['isBanned'] == true) {
             await _firebaseAuth.signOut();
-            throw Exception('Votre compte a été suspendu. Contactez le support.');
+            throw Exception('User is banned.');
           }
           _currentAccountHolder = User.fromJson(userData);
         } else if (adminDoc.exists) {
