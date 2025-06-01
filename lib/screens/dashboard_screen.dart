@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:foundita/providers/theme_provider.dart';
 import 'package:foundita/providers/dashboard_provider.dart';
+import 'package:foundita/providers/login_provider.dart';
+import 'package:foundita/models/administrator.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -15,7 +17,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<DashboardProvider>(context, listen: false).loadInitialStats();
+      final loginProvider = Provider.of<LoginProvider>(context, listen: false);
+      if (loginProvider.currentAccountHolder is Administrator) {
+        Provider.of<DashboardProvider>(context, listen: false).loadInitialStats();
+      }
     });
   }
 
@@ -24,70 +29,82 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final darkMode = themeProvider.isDarkMode;
 
-    return Scaffold(
-      backgroundColor: darkMode ? const Color(0xFF1B262C) : const Color(0xFFD1ECFF),
-      appBar: AppBar(
-        title: const Text('Statistiques Mensuelles'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => _refreshData(context),
-          ),
-        ],
-      ),
-      body: Consumer<DashboardProvider>(
-        builder: (context, provider, _) {
-          if (provider.isLoading && provider.monthlyStats == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    return Consumer2<LoginProvider, DashboardProvider>(
+      builder: (context, loginProvider, dashboardProvider, child) {
+        if (loginProvider.currentAccountHolder == null || !(loginProvider.currentAccountHolder is Administrator)) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Access Denied')),
+            body: const Center(
+              child: Text('You do not have permission to access this page.', style: TextStyle(fontSize: 18)),
+            ),
+          );
+        }
 
-          if (provider.error != null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Erreur de chargement',
+        return Scaffold(
+          backgroundColor: darkMode ? const Color(0xFF1B262C) : const Color(0xFFD1ECFF),
+          appBar: AppBar(
+            title: const Text('Monthly Statistics'),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: () => _refreshData(context),
+              ),
+            ],
+          ),
+          body: Builder(
+            builder: (context) {
+              if (dashboardProvider.isLoading && dashboardProvider.monthlyStats == null) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (dashboardProvider.error != null) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Error loading data',
+                        style: TextStyle(
+                          color: darkMode ? Colors.white : Colors.red,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        onPressed: () => _refreshData(context),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              final stats = dashboardProvider.monthlyStats;
+              if (stats == null || stats.isEmpty) {
+                return Center(
+                  child: Text(
+                    'No data available',
                     style: TextStyle(
-                      color: darkMode ? Colors.white : Colors.red,
+                      color: darkMode ? Colors.white : Colors.black,
                       fontSize: 18,
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () => _refreshData(context),
-                    child: const Text('Réessayer'),
-                  ),
-                ],
-              ),
-            );
-          }
+                );
+              }
 
-          final stats = provider.monthlyStats;
-          if (stats == null || stats.isEmpty) {
-            return Center(
-              child: Text(
-                'Aucune donnée disponible',
-                style: TextStyle(
-                  color: darkMode ? Colors.white : Colors.black,
-                  fontSize: 18,
-                ),
-              ),
-            );
-          }
-
-          return _buildStatsList(context, stats, darkMode);
-        },
-      ),
+              return _buildStatsList(context, stats, darkMode);
+            },
+          ),
+        );
+      },
     );
   }
 
   Widget _buildStatsList(BuildContext context, Map<String, Map<String, int>> stats, bool darkMode) {
     return Stack(
       children: [
-        // Éléments de fond avec vérification de disponibilité des assets
         Positioned(
           top: -50,
           right: -50,
@@ -112,8 +129,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         ),
-
-        // Contenu principal avec RefreshIndicator
         RefreshIndicator(
           onRefresh: () => _refreshData(context),
           child: ListView.builder(
@@ -145,15 +160,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ),
                         ),
                         const SizedBox(height: 16),
-                        // Correction pour éviter le débordement
                         SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              _buildStatCard(context, 'Objets Perdus', monthData['lost'] ?? 0, darkMode),
-                              const SizedBox(width: 20), // Pour assurer l'espacement
-                              _buildStatCard(context, 'Objets Trouvés', monthData['found'] ?? 0, darkMode),
+                              _buildStatCard(context, 'Lost Items', monthData['lost'] ?? 0, darkMode),
+                              const SizedBox(width: 20),
+                              _buildStatCard(context, 'Found Items', monthData['found'] ?? 0, darkMode),
                             ],
                           ),
                         ),
@@ -169,12 +183,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // Méthode pour gérer plus gracieusement les assets manquants
   Widget _buildAssetImage(String path, double width, double height) {
     return Container(
       width: width,
       height: height,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.transparent,
         shape: BoxShape.circle,
       ),
@@ -183,7 +196,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         width: width,
         height: height,
         errorBuilder: (context, error, stackTrace) {
-          // Fallback quand l'image n'est pas disponible
           return Container(
             width: width,
             height: height,
@@ -238,12 +250,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final parts = monthKey.split('-');
     final month = int.parse(parts[0]);
     final year = int.parse(parts[1]);
-    
+
     final monthNames = [
-      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
     ];
-    
+
     return '${monthNames[month - 1]} $year';
   }
 
