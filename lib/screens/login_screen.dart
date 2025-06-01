@@ -29,7 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Connexion réussie !'),
+            content: Text('Login successful!'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
@@ -55,33 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Connexion Google réussie !'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
-
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) {
-            Navigator.pushReplacementNamed(context, '/home');
-          }
-        });
-      }
-    } catch (e) {
-      // Error is handled by the provider
-    }
-  }
-
-  Future<void> _loginWithFacebook(BuildContext context) async {
-    final loginProvider = Provider.of<LoginProvider>(context, listen: false);
-
-    try {
-      await loginProvider.loginWithFacebook();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Connexion Facebook réussie !'),
+            content: Text('Google login successful!'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
@@ -101,6 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white, // Set a consistent background color
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
@@ -110,38 +85,30 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 60), // Increased space at the top
                   // App Logo or Title
                   Text(
-                    'Foundita',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    'FoundIt',
+                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).primaryColor,
+                          letterSpacing: 1.5, // Added letter spacing for style
                         ),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Your go-to app for lost & found items',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                  ),
+                  const SizedBox(height: 60), // Increased space before fields
                   // Email Field
                   _buildEmailField(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20), // Increased space between fields
                   // Password Field
                   _buildPasswordField(),
-                  const SizedBox(height: 8),
-                  // Forgot Password Link
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        // TODO: Implement password reset navigation
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Fonctionnalité de réinitialisation à venir'),
-                          ),
-                        );
-                      },
-                      child: const Text('Mot de passe oublié ?'),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 32), // Adjusted space after password field
                   // Error or Loading Indicator
                   Consumer<LoginProvider>(
                     builder: (context, loginProvider, _) {
@@ -150,17 +117,19 @@ class _LoginScreenState extends State<LoginScreen> {
                           if (loginProvider.error != null)
                             _buildErrorMessage(loginProvider.error!),
                           if (loginProvider.isLoading)
-                            const CircularProgressIndicator()
+                            CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
+                            )
                           else
                             _buildLoginButton(context),
                         ],
                       );
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24), // Space before social buttons
                   // Social Login Buttons
                   _buildSocialLoginButtons(context),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 32), // Space before register link
                   // Register Link
                   _buildRegisterButton(),
                 ],
@@ -177,20 +146,31 @@ class _LoginScreenState extends State<LoginScreen> {
       controller: _emailController,
       decoration: InputDecoration(
         labelText: 'Email',
-        prefixIcon: const Icon(Icons.email_outlined),
+        hintText: 'Enter your email address',
+        prefixIcon: const Icon(Icons.email_outlined, color: Colors.grey),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none, // Remove default border
+        ),
+        enabledBorder: OutlineInputBorder( // Custom enabled border
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+        ),
+        focusedBorder: OutlineInputBorder( // Custom focused border
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
         ),
         filled: true,
-        fillColor: Colors.grey[100],
+        fillColor: Colors.grey[50], // Lighter fill color
+        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       ),
       keyboardType: TextInputType.emailAddress,
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Veuillez entrer votre email';
+          return 'Please enter your email';
         }
         if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-          return 'Email invalide';
+          return 'Invalid email format';
         }
         return null;
       },
@@ -201,11 +181,13 @@ class _LoginScreenState extends State<LoginScreen> {
     return TextFormField(
       controller: _passwordController,
       decoration: InputDecoration(
-        labelText: 'Mot de passe',
-        prefixIcon: const Icon(Icons.lock_outline),
+        labelText: 'Password',
+        hintText: 'Enter your password',
+        prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
         suffixIcon: IconButton(
           icon: Icon(
             _obscurePassword ? Icons.visibility_off : Icons.visibility,
+            color: Colors.grey,
           ),
           onPressed: () {
             setState(() {
@@ -215,17 +197,27 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
         ),
         filled: true,
-        fillColor: Colors.grey[100],
+        fillColor: Colors.grey[50],
+        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       ),
       obscureText: _obscurePassword,
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Veuillez entrer votre mot de passe';
+          return 'Please enter your password';
         }
         if (value.length < 6) {
-          return 'Le mot de passe doit faire au moins 6 caractères';
+          return 'Password must be at least 6 characters long';
         }
         return null;
       },
@@ -237,15 +229,18 @@ class _LoginScreenState extends State<LoginScreen> {
       width: double.infinity,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
+          backgroundColor: Theme.of(context).primaryColor, // Use primary color for button
+          foregroundColor: Colors.white, // Text color
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+          elevation: 5, // Add a subtle shadow
         ),
         onPressed: () => _loginWithEmail(context),
         child: const Text(
-          'Se connecter',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          'Login',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -254,48 +249,35 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildSocialLoginButtons(BuildContext context) {
     return Column(
       children: [
-        const Text(
-          'Ou connectez-vous avec',
-          style: TextStyle(color: Colors.grey),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16.0),
+          child: Text(
+            'Or log in with',
+            style: TextStyle(color: Colors.grey[700], fontSize: 15),
+          ),
         ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Google Button
-            OutlinedButton.icon(
+        Center( // Center the single Google button
+          child: SizedBox( // Give the button a defined width
+            width: MediaQuery.of(context).size.width * 0.7, // Example: 70% of screen width
+            child: OutlinedButton.icon(
               onPressed: () => _loginWithGoogle(context),
               icon: Image.asset(
                 'assets/images/google_logo.png', // Add Google logo in assets
                 height: 24,
               ),
-              label: const Text('Google'),
+              label: const Text(
+                'Google',
+                style: TextStyle(fontSize: 16, color: Colors.black87),
+              ),
               style: OutlinedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
+                side: BorderSide(color: Colors.grey.shade300, width: 1.5),
               ),
             ),
-            const SizedBox(width: 16),
-            // Facebook Button
-            OutlinedButton.icon(
-              onPressed: () => _loginWithFacebook(context),
-              icon: Image.asset(
-                'assets/images/facebook_logo.png', // Add Facebook logo in assets
-                height: 24,
-              ),
-              label: const Text('Facebook'),
-              style: OutlinedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ],
     );
@@ -307,13 +289,14 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.red[100],
+          color: Colors.red[50], // Lighter red for error background
           borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.red.shade200), // Subtle red border
         ),
         child: Row(
           children: [
             const Icon(Icons.error_outline, color: Colors.red),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
                 message,
@@ -331,9 +314,21 @@ class _LoginScreenState extends State<LoginScreen> {
       onPressed: () {
         Navigator.pushNamed(context, '/register');
       },
-      child: const Text(
-        'Pas de compte ? Inscrivez-vous',
-        style: TextStyle(fontSize: 16),
+      child: RichText(
+        text: TextSpan(
+          text: 'Don\'t have an account? ',
+          style: TextStyle(color: Colors.grey[700], fontSize: 16),
+          children: [
+            TextSpan(
+              text: 'Sign Up',
+              style: TextStyle(
+                color: Theme.of(context).primaryColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

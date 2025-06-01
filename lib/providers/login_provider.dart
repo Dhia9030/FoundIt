@@ -18,16 +18,23 @@ class LoginProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
+  // Helper method to update _currentAccountHolder and notify listeners
+  void _setAccountHolder(AccountHolder? holder) {
+    _currentAccountHolder = holder;
+    notifyListeners();
+  }
+
   Future<void> loginWithEmailAndPassword({
     required String email,
     required String password,
   }) async {
     try {
       _setLoading(true);
-      _currentAccountHolder = await _loginService.loginWithEmailAndPassword(
+      final accountHolder = await _loginService.loginWithEmailAndPassword(
         email: email,
         password: password,
       );
+      _setAccountHolder(accountHolder); // Set the account holder
     } catch (e) {
       _handleError(e);
       rethrow;
@@ -39,7 +46,8 @@ class LoginProvider with ChangeNotifier {
   Future<void> loginWithGoogle() async {
     try {
       _setLoading(true);
-      _currentAccountHolder = await _loginService.loginWithGoogle();
+      final accountHolder = await _loginService.loginWithGoogle();
+      _setAccountHolder(accountHolder); // Set the account holder
     } catch (e) {
       _handleError(e);
       rethrow;
@@ -51,7 +59,8 @@ class LoginProvider with ChangeNotifier {
   Future<void> loginWithFacebook() async {
     try {
       _setLoading(true);
-      _currentAccountHolder = await _loginService.loginWithFacebook();
+      final accountHolder = await _loginService.loginWithFacebook();
+      _setAccountHolder(accountHolder); // Set the account holder
     } catch (e) {
       _handleError(e);
       rethrow;
@@ -64,7 +73,7 @@ class LoginProvider with ChangeNotifier {
     try {
       _setLoading(true);
       await _loginService.logout();
-      _currentAccountHolder = null;
+      _setAccountHolder(null); // Clear account holder on logout
     } catch (e) {
       _handleError(e);
       rethrow;
@@ -76,33 +85,39 @@ class LoginProvider with ChangeNotifier {
   Future<void> fetchCurrentAccountHolder() async {
     try {
       _setLoading(true);
-      
-      final auth.FirebaseAuth _firebaseAuth = auth.FirebaseAuth.instance;
-      final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-      final user = _firebaseAuth.currentUser;
-      if (user != null) {
-        String userId = user.uid;
+      final firebaseUser = auth.FirebaseAuth.instance.currentUser;
+      if (firebaseUser != null) {
+        String userId = firebaseUser.uid;
+        if (kDebugMode) {
+          print('Fetching account holder for user ID: $userId');
+        }
 
         DocumentSnapshot userDoc =
-            await _firestore.collection('users').doc(userId).get();
+            await FirebaseFirestore.instance.collection('users').doc(userId).get();
         DocumentSnapshot adminDoc =
-            await _firestore.collection('administrators').doc(userId).get();
+            await FirebaseFirestore.instance.collection('administrators').doc(userId).get();
 
         if (userDoc.exists) {
           final userData = userDoc.data() as Map<String, dynamic>;
           if (userData['isBanned'] == true) {
-            await _firebaseAuth.signOut();
+            await auth.FirebaseAuth.instance.signOut();
             throw Exception('User is banned.');
           }
-          _currentAccountHolder = User.fromJson(userData);
+          _setAccountHolder(User.fromJson(userData)); // Set as User
         } else if (adminDoc.exists) {
-          // Pas de vérification de ban pour les administrateurs
-          _currentAccountHolder = Administrator.fromJson(adminDoc.data() as Map<String, dynamic>);
+          _setAccountHolder(Administrator.fromJson(adminDoc.data() as Map<String, dynamic>)); // Set as Administrator
+        } else {
+          _setAccountHolder(null); // No account holder found
+          await auth.FirebaseAuth.instance.signOut(); // Log out if not found
+          throw Exception('User data not found in users or administrators collection.');
         }
+      } else {
+        _setAccountHolder(null); // No logged-in Firebase user
       }
     } catch (e) {
       _handleError(e);
+      _setAccountHolder(null); // Ensure null on error
       rethrow;
     } finally {
       _setLoading(false);
@@ -115,7 +130,15 @@ class LoginProvider with ChangeNotifier {
   }
 
   void _handleError(dynamic e) {
+    if (kDebugMode) {
+      print('LoginProvider error: $e');
+    }
     _error = e.toString();
+    notifyListeners();
+  }
+
+  void clearError() {
+    _error = null;
     notifyListeners();
   }
 }
