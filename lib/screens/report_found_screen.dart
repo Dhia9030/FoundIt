@@ -1,5 +1,4 @@
 import 'dart:io' as io;
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -44,8 +43,7 @@ class _ReportFoundItemScreenState extends State<ReportFoundItemScreen> {
       if (permission == LocationPermission.denied) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-                Text('Location permission is required to report a found item.'),
+            content: Text('Location permission is required to report a found item.'),
           ),
         );
         return;
@@ -55,8 +53,7 @@ class _ReportFoundItemScreenState extends State<ReportFoundItemScreen> {
     if (permission == LocationPermission.deniedForever) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-              'Location permission is permanently denied. Please enable it in app settings.'),
+          content: Text('Location permission is permanently denied. Please enable it in app settings.'),
         ),
       );
       return;
@@ -65,8 +62,7 @@ class _ReportFoundItemScreenState extends State<ReportFoundItemScreen> {
     try {
       _currentPosition = await Geolocator.getCurrentPosition();
       setState(() {
-        _selectedLocation =
-            LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
+        _selectedLocation = LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
       });
     } catch (e) {
       print("Error getting location: $e");
@@ -102,8 +98,7 @@ class _ReportFoundItemScreenState extends State<ReportFoundItemScreen> {
       setState(() {
         _isSubmitting = true;
       });
-      final foundItemProvider =
-          Provider.of<FoundItemProvider>(context, listen: false);
+      final foundItemProvider = Provider.of<FoundItemProvider>(context, listen: false);
 
       try {
         final success = await foundItemProvider.reportFoundItem(
@@ -129,8 +124,7 @@ class _ReportFoundItemScreenState extends State<ReportFoundItemScreen> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content:
-                  Text('Failed to report item. Please check the information.'),
+              content: Text('Failed to report item. Please check the information.'),
             ),
           );
         }
@@ -166,196 +160,306 @@ class _ReportFoundItemScreenState extends State<ReportFoundItemScreen> {
   Widget build(BuildContext context) {
     final String userId = FirebaseAuth.instance.currentUser!.uid;
     return Scaffold(
+      backgroundColor: const Color(0xFFE6F0FA), // Light blue pastel background
       appBar: AppBar(
-        title: Text('Report Found Item'),
+        title: const Text('Report Found Item'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        titleTextStyle: const TextStyle(
+          color: Colors.black,
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                TextFormField(
-                  controller: _itemNameController,
-                  decoration: InputDecoration(labelText: 'Item Name'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter the item name';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 12),
-                DropdownButtonFormField<Category>(
-                  value: _type,
-                  onChanged: (Category? newValue) {
-                    if (newValue != null) {
-                      setState(() {
-                        _type = newValue;
-                      });
-                    }
-                  },
-                  items: Category.values.map((Category category) {
-                    return DropdownMenuItem<Category>(
-                      value: category,
-                      child: Text(category.name),
-                    );
-                  }).toList(),
-                  decoration: InputDecoration(labelText: 'Type'),
-                  validator: (value) =>
-                      value == null ? 'Please select item type' : null,
-                ),
-                SizedBox(height: 12),
-                TextFormField(
-                  controller: _descriptionController,
-                  decoration: InputDecoration(labelText: 'Description'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter the item description';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 12),
-                TextFormField(
-                  controller: _colorController,
-                  decoration: InputDecoration(labelText: 'Color'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter the item color';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 12),
-
-                // 📅 Date Pickers
-                TextFormField(
-                  readOnly: true,
-                  decoration: InputDecoration(
-                    labelText: 'Date Found',
-                    suffixIcon: Icon(Icons.calendar_today),
-                  ),
-                  controller: TextEditingController(
-                    text: '${_foundDate.day}/${_foundDate.month}/${_foundDate.year}',
-                  ),
-                  onTap: () async {
-                    final DateTime? picked = await showDatePicker(
-                      context: context,
-                      initialDate: _foundDate,
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2100),
-                    );
-                    if (picked != null) {
-                      setState(() {
-                        _foundDate = picked;
-                      });
-                    }
-                  },
-                ),
-                SizedBox(height: 12),
-                TextFormField(
-                  readOnly: true,
-                  decoration: InputDecoration(
-                    labelText: 'Report Date',
-                    suffixIcon: Icon(Icons.calendar_today),
-                  ),
-                  controller: TextEditingController(
-                    text: '${_date.day}/${_date.month}/${_date.year}',
-                  ),
-                  onTap: () async {
-                    final DateTime? picked = await showDatePicker(
-                      context: context,
-                      initialDate: _date,
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2100),
-                    );
-                    if (picked != null) {
-                      setState(() {
-                        _date = picked;
-                      });
-                    }
-                  },
-                ),
-                SizedBox(height: 12),
-
-                ElevatedButton(
-                  onPressed: _pickImage,
-                  child: Text('Pick Image'),
-                ),
-                if (_imageFile != null)
-  Container(
-    height: 150,
-    decoration: BoxDecoration(
-      border: Border.all(color: Colors.grey),
-      borderRadius: BorderRadius.circular(4),
-    ),
-    child: Stack(
-      children: [
-        Center(
-          child: Image.network( // ✅ This is web-compatible
-            _imageFile!.path,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) =>
-                Icon(Icons.image, size: 50),
-          ),
-        ),
-        Positioned(
-          top: 0,
-          right: 0,
-          child: IconButton(
-            icon: Icon(Icons.close, color: Colors.red),
-            onPressed: () {
-              setState(() {
-                _imageFile = null;
-              });
-            },
-          ),
-        ),
-      ],
-    ),
-  ),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () async {
-                    final result = await Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => MapPickerScreen(),
-                      ),
-                    );
-
-                    if (result != null && result is Map<String, double>) {
-                      setState(() {
-                        _selectedLocation = LatLng(
-                          result['latitude']!,
-                          result['longitude']!,
-                        );
-                      });
-                    }
-                  },
-                  child: Text(_selectedLocation == null
-                      ? 'Select Location on Map'
-                      : 'Change Location'),
-                ),
-                if (_selectedLocation != null) ...[
-                  SizedBox(height: 12),
-                  Text(
-                    'Selected Location: ${_selectedLocation!.latitude.toStringAsFixed(6)}, ${_selectedLocation!.longitude.toStringAsFixed(6)}',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ],
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _isSubmitting
-                      ? null
-                      : () => _handleReport(context, userId),
-                  child: _isSubmitting
-                      ? CircularProgressIndicator()
-                      : Text('Report Found Item'),
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.all(16.0),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
                 ),
               ],
+            ),
+            child: Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    TextFormField(
+                      controller: _itemNameController,
+                      decoration: InputDecoration(
+                        labelText: 'Item Name',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFFF5F7FF),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter the item name';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<Category>(
+                      value: _type,
+                      onChanged: (Category? newValue) {
+                        if (newValue != null) {
+                          setState(() {
+                            _type = newValue;
+                          });
+                        }
+                      },
+                      items: Category.values.map((Category category) {
+                        return DropdownMenuItem<Category>(
+                          value: category,
+                          child: Text(category.name),
+                        );
+                      }).toList(),
+                      decoration: InputDecoration(
+                        labelText: 'Type',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFFF5F7FF),
+                      ),
+                      validator: (value) => value == null ? 'Please select item type' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _descriptionController,
+                      decoration: InputDecoration(
+                        labelText: 'Description',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFFF5F7FF),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter the item description';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _colorController,
+                      decoration: InputDecoration(
+                        labelText: 'Color',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFFF5F7FF),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter the item color';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      readOnly: true,
+                      decoration: InputDecoration(
+                        labelText: 'Date Found',
+                        suffixIcon: const Icon(Icons.calendar_today),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFFF5F7FF),
+                      ),
+                      controller: TextEditingController(
+                        text: '${_foundDate.day}/${_foundDate.month}/${_foundDate.year}',
+                      ),
+                      onTap: () async {
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          initialDate: _foundDate,
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2100),
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            _foundDate = picked;
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      readOnly: true,
+                      decoration: InputDecoration(
+                        labelText: 'Report Date',
+                        suffixIcon: const Icon(Icons.calendar_today),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFFF5F7FF),
+                      ),
+                      controller: TextEditingController(
+                        text: '${_date.day}/${_date.month}/${_date.year}',
+                      ),
+                      onTap: () async {
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          initialDate: _date,
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2100),
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            _date = picked;
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    Center(
+                      child: SizedBox(
+                        width: 200, // Fixed width for the button
+                        child: ElevatedButton(
+                          onPressed: _pickImage,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF6C63FF),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: const Text(
+                            'Pick Image',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (_imageFile != null)
+                      Container(
+                        height: 150,
+                        margin: const EdgeInsets.only(top: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Stack(
+                          children: [
+                            Center(
+                              child: Image.network(
+                                _imageFile!.path,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(Icons.image, size: 50),
+                              ),
+                            ),
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: IconButton(
+                                icon: const Icon(Icons.close, color: Colors.red),
+                                onPressed: () {
+                                  setState(() {
+                                    _imageFile = null;
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 20),
+                    Center(
+                      child: SizedBox(
+                        width: 200, // Fixed width for the button
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            final result = await Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => MapPickerScreen(),
+                              ),
+                            );
+                            if (result != null && result is Map<String, double>) {
+                              setState(() {
+                                _selectedLocation = LatLng(
+                                  result['latitude']!,
+                                  result['longitude']!,
+                                );
+                              });
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF6C63FF),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: Text(
+                            _selectedLocation == null
+                                ? 'Select Location on Map'
+                                : 'Change Location',
+                            style: const TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (_selectedLocation != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        'Selected Location: ${_selectedLocation!.latitude.toStringAsFixed(6)}, ${_selectedLocation!.longitude.toStringAsFixed(6)}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                    const SizedBox(height: 20),
+                    Center(
+                      child: SizedBox(
+                        width: 200, // Fixed width for the button
+                        child: ElevatedButton(
+                          onPressed: _isSubmitting
+                              ? null
+                              : () => _handleReport(context, userId),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF6C63FF),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: _isSubmitting
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : const Text(
+                                  'Report Found Item',
+                                  style: TextStyle(color: Colors.white, fontSize: 16),
+                                ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
