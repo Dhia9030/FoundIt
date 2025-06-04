@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../models/mock_notification.dart';
+import '../models/app_notification.dart'; 
+import '../providers/notification_provider.dart'; 
 import '../providers/theme_provider.dart';
-import '../services/mock_notification_service.dart';
 import '../widgets/notification_card.dart';
 import '../widgets/menu_drawer.dart';
 
@@ -18,25 +18,12 @@ class NotificationsScreen extends StatefulWidget {
 class _NotificationsScreenState extends State<NotificationsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final MockNotificationService _notificationService = MockNotificationService();
-  List<MockNotification> _notifications = [];
-  bool _isLoading = true;
   bool isMenuOpen = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _loadNotifications();
-  }
-
-  Future<void> _loadNotifications() async {
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 800));
-    setState(() {
-      _notifications = _notificationService.getMockNotifications();
-      _isLoading = false;
-    });
   }
 
   void _toggleMenu() {
@@ -54,16 +41,27 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     final themeProvider = Provider.of<ThemeProvider>(context);
     final darkMode = themeProvider.isDarkMode;
 
+    final notificationProvider = Provider.of<NotificationProvider>(context);
+    final notifications =
+        notificationProvider.notifications;
+    final yourItemsNotifications =
+        notifications.where((n) => n.type == 'lost_item_found_match').toList();
+    final peoplesNotifications =
+        notifications.where((n) => n.type == 'found_item_lost_match').toList();
+
     return Scaffold(
-      backgroundColor: darkMode ? const Color(0xFF1B262C) : const Color(0xFFCDDDFF),
+      backgroundColor:
+          darkMode ? const Color(0xFF1B262C) : const Color(0xFFCDDDFF),
       body: Stack(
         children: [
-          // Background blobs
+    
           Positioned(
             top: -50,
             right: -50,
             child: Image.asset(
-              darkMode ? 'assets/images/blob-1.png' : 'assets/images/blob2-1.png',
+              darkMode
+                  ? 'assets/images/blob-1.png'
+                  : 'assets/images/blob2-1.png',
               width: 250,
               height: 250,
             ),
@@ -72,7 +70,9 @@ class _NotificationsScreenState extends State<NotificationsScreen>
             top: 150,
             left: -100,
             child: Image.asset(
-              darkMode ? 'assets/images/blob-2.png' : 'assets/images/blob2-2.png',
+              darkMode
+                  ? 'assets/images/blob-2.png'
+                  : 'assets/images/blob2-2.png',
               width: 290,
               height: 290,
             ),
@@ -81,7 +81,9 @@ class _NotificationsScreenState extends State<NotificationsScreen>
             bottom: -100,
             right: -100,
             child: Image.asset(
-              darkMode ? 'assets/images/blob-3.png' : 'assets/images/blob2-3.png',
+              darkMode
+                  ? 'assets/images/blob-3.png'
+                  : 'assets/images/blob2-3.png',
               width: 290,
               height: 290,
             ),
@@ -130,7 +132,8 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                     ),
                     labelPadding: const EdgeInsets.symmetric(horizontal: 8),
                     labelColor: const Color(0xFF539DF3),
-                    unselectedLabelColor: darkMode ? Colors.grey[400] : Colors.grey,
+                    unselectedLabelColor:
+                        darkMode ? Colors.grey[400] : Colors.grey,
                     tabs: const [
                       Tab(text: "All"),
                       Tab(text: "Your items"),
@@ -142,15 +145,12 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   child: TabBarView(
                     controller: _tabController,
                     children: [
-                      _buildNotificationsList(_notifications, darkMode),
-                      _buildNotificationsList(
-                        _notifications.where((n) => n.type == 'FOUND_YOUR_ITEM').toList(),
-                        darkMode,
-                      ),
-                      _buildNotificationsList(
-                        _notifications.where((n) => n.type == 'LOOKING_FOR_ITEM').toList(),
-                        darkMode,
-                      ),
+                      _buildNotificationsList(notifications, darkMode,
+                          notificationProvider),
+                      _buildNotificationsList(yourItemsNotifications, darkMode,
+                          notificationProvider),
+                      _buildNotificationsList(peoplesNotifications, darkMode,
+                          notificationProvider),
                     ],
                   ),
                 ),
@@ -176,15 +176,8 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     );
   }
 
-  Widget _buildNotificationsList(List<MockNotification> notifications, bool darkMode) {
-    if (_isLoading) {
-      return Center(
-        child: CircularProgressIndicator(
-          color: const Color(0xFF539DF3),
-        ),
-      );
-    }
-
+  Widget _buildNotificationsList(List<AppNotification> notifications,
+      bool darkMode, NotificationProvider notificationProvider) {
     if (notifications.isEmpty) {
       return Center(
         child: Text(
@@ -202,10 +195,14 @@ class _NotificationsScreenState extends State<NotificationsScreen>
       padding: const EdgeInsets.all(16),
       itemCount: notifications.length,
       itemBuilder: (context, index) {
+        final notification = notifications[index];
         return NotificationCard(
-          notification: notifications[index],
+          notification: notification,
+          darkMode: darkMode,
           onTap: () {
-            print("Notification tapped: ${notifications[index].id}");
+            print("Notification tapped: ${notification.id}");
+            notificationProvider.markAsRead(notification.id);
+  
           },
         );
       },

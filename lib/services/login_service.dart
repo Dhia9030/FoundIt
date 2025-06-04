@@ -28,23 +28,23 @@ class LoginService {
       DocumentSnapshot userDoc =
           await _firestore.collection('users').doc(userId).get();
       DocumentSnapshot adminDoc =
-          await _firestore.collection('administrators').doc(userId).get();
+          await _firestore.collection('admins').doc(userId).get();
 
       if (userDoc.exists) {
         final userData = userDoc.data() as Map<String, dynamic>;
         if (userData['isBanned'] == true) {
           await _firebaseAuth.signOut();
-          throw Exception('Votre compte a été suspendu. Contactez le support.');
+          throw Exception('Your account has been suspended. Please contact support.');
         }
         return User.fromJson(userData);
       } else if (adminDoc.exists) {
-        // Pas de vérification de ban pour les administrateurs
+        // No ban check for administrators
         return Administrator.fromJson(adminDoc.data() as Map<String, dynamic>);
       } else {
-        throw Exception('Utilisateur non trouvé dans les collections');
+        throw Exception('User not found in collections');
       }
     } catch (e) {
-      print('Erreur de connexion: $e');
+      print('Login error: $e');
       rethrow;
     }
   }
@@ -71,7 +71,7 @@ class LoginService {
       }
       return null;
     } catch (e) {
-      print('Erreur de connexion Google: $e');
+      print('Google login error: $e');
       rethrow;
     }
   }
@@ -82,13 +82,13 @@ class LoginService {
     DocumentSnapshot userDoc =
         await _firestore.collection('users').doc(userId).get();
     DocumentSnapshot adminDoc =
-        await _firestore.collection('administrators').doc(userId).get();
+        await _firestore.collection('admins').doc(userId).get();
 
     if (userDoc.exists) {
       final userData = userDoc.data() as Map<String, dynamic>;
       if (userData['isBanned'] == true) {
         await _firebaseAuth.signOut();
-        throw Exception('Votre compte a été suspendu. Contactez le support.');
+        throw Exception('Your account has been suspended. Please contact support.');
       }
       return User.fromJson(userData);
     } else if (adminDoc.exists) {
@@ -97,7 +97,7 @@ class LoginService {
       // If the user doesn't exist in either collection, you might want to:
       // 1. Create a new user document in 'users' collection
       // 2. Redirect them to a profile setup screen
-      throw Exception('Utilisateur non trouvé dans les collections');
+      throw Exception('User not found in collections');
     }
   }
 
@@ -125,14 +125,13 @@ class LoginService {
           print('Facebook login error message: ${result.message}');
         }
         // Handle the error appropriately
-        throw Exception('La connexion Facebook a échoué.');
+        throw Exception('Facebook login failed.');
       }
     } catch (e) {
-      print('Erreur de connexion Facebook: $e');
+      print('Facebook login error: $e');
       rethrow;
     }
   }
-
 
   Future<void> logout() async {
     await _firebaseAuth.signOut();

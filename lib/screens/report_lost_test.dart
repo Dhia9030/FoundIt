@@ -95,7 +95,6 @@ class _ReportLostItemScreenState extends State<ReportLostItemScreen> {
       });
 
       try {
-        // Get the current user's ID (replace with your auth implementation)
         String userId = FirebaseAuth.instance.currentUser!.uid;
 
         await Provider.of<LostItemProvider>(context, listen: false)
@@ -112,15 +111,12 @@ class _ReportLostItemScreenState extends State<ReportLostItemScreen> {
           lostDate: _lostDate,
         );
 
-        // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Lost item reported successfully')),
         );
 
-        // Navigate back
         Navigator.of(context).pop();
       } catch (e) {
-        // Show error message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error reporting lost item: ${e.toString()}')),
         );
@@ -135,161 +131,240 @@ class _ReportLostItemScreenState extends State<ReportLostItemScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFE6F0FA), // Light blue pastel background
       appBar: AppBar(
-        title: Text('Report Lost Item'),
+        title: const Text('Report Lost Item'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        titleTextStyle: const TextStyle(
+          color: Colors.black,
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: EdgeInsets.all(16),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextFormField(
-                      controller: _itemNameController,
-                      decoration: InputDecoration(
-                        labelText: 'Item Name',
-                        border: OutlineInputBorder(),
+              padding: const EdgeInsets.all(16),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(16.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter the item name';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    DropdownButtonFormField<Category>(
-                      value: _selectedCategory,
-                      decoration: InputDecoration(
-                        labelText: 'Category',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: Category.values.map((category) {
-                        return DropdownMenuItem(
-                          value: category,
-                          child: Text(category.name),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedCategory = value!;
-                        });
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    TextFormField(
-                      controller: _descriptionController,
-                      decoration: InputDecoration(
-                        labelText: 'Description',
-                        border: OutlineInputBorder(),
-                      ),
-                      maxLines: 3,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a description';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    TextFormField(
-                      controller: _colorController,
-                      decoration: InputDecoration(
-                        labelText: 'Color',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter the color';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    InkWell(
-                      onTap: () => _selectDate(context),
-                      child: InputDecorator(
-                        decoration: InputDecoration(
-                          labelText: 'Lost Date',
-                          border: OutlineInputBorder(),
+                    ],
+                  ),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TextFormField(
+                          controller: _itemNameController,
+                          decoration: InputDecoration(
+                            labelText: 'Item Name',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            filled: true,
+                            fillColor: const Color(0xFFF5F7FF),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter the item name';
+                            }
+                            return null;
+                          },
                         ),
-                        child: Text(
-                          DateFormat('MMM dd, yyyy').format(_lostDate),
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField<Category>(
+                          value: _selectedCategory,
+                          decoration: InputDecoration(
+                            labelText: 'Category',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            filled: true,
+                            fillColor: const Color(0xFFF5F7FF),
+                          ),
+                          items: Category.values.map((category) {
+                            return DropdownMenuItem(
+                              value: category,
+                              child: Text(category.name),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedCategory = value!;
+                            });
+                          },
                         ),
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      onPressed: _selectLocation,
-                      icon: Icon(Icons.location_on),
-                      label: Text('Select Location'),
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      _locationText,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: _latitude == null ? Colors.red : Colors.green,
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      onPressed: _pickImage,
-                      icon: Icon(Icons.photo),
-                      label: Text('Add Photo'),
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    if (_imageFile != null)
-                      Container(
-                        height: 150,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                          borderRadius: BorderRadius.circular(4),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _descriptionController,
+                          decoration: InputDecoration(
+                            labelText: 'Description',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            filled: true,
+                            fillColor: const Color(0xFFF5F7FF),
+                          ),
+                          maxLines: 3,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a description';
+                            }
+                            return null;
+                          },
                         ),
-                        child: Stack(
-                          children: [
-                            Center(
-                              child: Image.network(
-                                _imageFile!.path,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Icon(Icons.image, size: 50),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _colorController,
+                          decoration: InputDecoration(
+                            labelText: 'Color',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            filled: true,
+                            fillColor: const Color(0xFFF5F7FF),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter the color';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        InkWell(
+                          onTap: () => _selectDate(context),
+                          child: InputDecorator(
+                            decoration: InputDecoration(
+                              labelText: 'Lost Date',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: const Color(0xFFF5F7FF),
+                              suffixIcon: const Icon(Icons.calendar_today),
+                            ),
+                            child: Text(
+                              DateFormat('MMM dd, yyyy').format(_lostDate),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Center(
+                          child: SizedBox(
+                            width: 200,
+                            child: ElevatedButton.icon(
+                              onPressed: _selectLocation,
+                              icon: const Icon(Icons.location_on),
+                              label: const Text('Select Location'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF6C63FF),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
                               ),
                             ),
-                            Positioned(
-                              top: 0,
-                              right: 0,
-                              child: IconButton(
-                                icon: Icon(Icons.close, color: Colors.red),
-                                onPressed: () {
-                                  setState(() {
-                                    _imageFile = null;
-                                  });
-                                },
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _locationText,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: _latitude == null ? Colors.red : Colors.green,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Center(
+                          child: SizedBox(
+                            width: 200,
+                            child: ElevatedButton.icon(
+                              onPressed: _pickImage,
+                              icon: const Icon(Icons.photo),
+                              label: const Text('Add Photo'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF6C63FF),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
                               ),
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: _submitForm,
-                      child: Text('Report Lost Item'),
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        textStyle: TextStyle(fontSize: 18),
-                      ),
+                        const SizedBox(height: 8),
+                        if (_imageFile != null)
+                          Container(
+                            height: 150,
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Stack(
+                              children: [
+                                Center(
+                                  child: Image.network(
+                                    _imageFile!.path,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        const Icon(Icons.image, size: 50),
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.close, color: Colors.red),
+                                    onPressed: () {
+                                      setState(() {
+                                        _imageFile = null;
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        const SizedBox(height: 24),
+                        Center(
+                          child: SizedBox(
+                            width: 200,
+                            child: ElevatedButton(
+                              onPressed: _submitForm,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF6C63FF),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                              child: const Text(
+                                'Report Lost Item',
+                                style: TextStyle(color: Colors.white, fontSize: 16),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
