@@ -17,6 +17,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:foundita/models/item.dart';
 import 'package:foundita/models/found_item.dart';
 import 'package:foundita/models/location.dart';
+import '../widgets/menu_drawer.dart';
+import '../widgets/bottom_navbar.dart';
 
 class ReportFoundItemScreen extends StatefulWidget {
   @override
@@ -24,6 +26,8 @@ class ReportFoundItemScreen extends StatefulWidget {
 }
 
 class _ReportFoundItemScreenState extends State<ReportFoundItemScreen> {
+  bool isMenuOpen = false;
+  int _currentNavIndex = 1; 
   final _formKey = GlobalKey<FormState>();
   final _itemNameController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -71,6 +75,35 @@ class _ReportFoundItemScreenState extends State<ReportFoundItemScreen> {
           content: Text('Failed to get your location: $e'),
         ),
       );
+    }
+  }
+
+   void _toggleMenu() {
+    setState(() => isMenuOpen = !isMenuOpen);
+  }
+
+  void _handleNavTap(int index) {
+    if (index == _currentNavIndex) return;
+
+    setState(() {
+      _currentNavIndex = index;
+      if (isMenuOpen) _toggleMenu();
+    });
+
+    // Handle navigation based on the selected tab
+    switch (index) {
+      case 0: // Search
+        Navigator.pushReplacementNamed(context, '/search');
+        break;
+      case 1: // Home
+        Navigator.pushReplacementNamed(context, '/home');
+        break;
+      case 2: // Notifications
+        Navigator.pushReplacementNamed(context, '/notifications');
+        break;
+      case 3: // Profile
+        Navigator.pushReplacementNamed(context, '/profile');
+        break;
     }
   }
 
@@ -171,7 +204,10 @@ class _ReportFoundItemScreenState extends State<ReportFoundItemScreen> {
           fontWeight: FontWeight.bold,
         ),
       ),
-      body: Padding(
+      body:Stack(
+        children: [
+          SafeArea(
+            child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Center(
           child: Container(
@@ -464,6 +500,23 @@ class _ReportFoundItemScreenState extends State<ReportFoundItemScreen> {
           ),
         ),
       ),
+          ),
+          if (isMenuOpen)
+            GestureDetector(
+              onTap: _toggleMenu,
+              behavior: HitTestBehavior.opaque,
+              child: Container(color: Colors.black.withOpacity(0.5)),
+            ),
+          MenuDrawer(
+            isMenuOpen: isMenuOpen,
+            onMenuToggle: _toggleMenu,
+          ),
+        ]
+      ),
+      /*bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: _currentNavIndex,
+        onTap: _handleNavTap,
+      ),*/
     );
   }
 }

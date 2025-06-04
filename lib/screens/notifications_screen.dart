@@ -7,7 +7,7 @@ import '../providers/notification_provider.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/notification_card.dart';
 import '../widgets/menu_drawer.dart';
-
+import '../widgets/bottom_navbar.dart';
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({Key? key}) : super(key: key);
 
@@ -19,6 +19,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool isMenuOpen = false;
+  int _currentNavIndex = 1;
 
   @override
   void initState() {
@@ -34,6 +35,31 @@ class _NotificationsScreenState extends State<NotificationsScreen>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _handleNavTap(int index) {
+    if (index == _currentNavIndex) return;
+
+    setState(() {
+      _currentNavIndex = index;
+      if (isMenuOpen) _toggleMenu();
+    });
+
+    // Handle navigation based on the selected tab
+    switch (index) {
+      case 0: // Search
+        Navigator.pushReplacementNamed(context, '/search');
+        break;
+      case 1: // Home
+        Navigator.pushReplacementNamed(context, '/home');
+        break;
+      case 2: // Notifications
+        Navigator.pushReplacementNamed(context, '/notifications');
+        break;
+      case 3: // Profile
+        Navigator.pushReplacementNamed(context, '/profile');
+        break;
+    }
   }
 
   @override
@@ -173,6 +199,10 @@ class _NotificationsScreenState extends State<NotificationsScreen>
           ),
         ],
       ),
+      /*bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: _currentNavIndex,
+        onTap: _handleNavTap,
+      ),*/
     );
   }
 

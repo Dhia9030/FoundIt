@@ -7,9 +7,14 @@ import '../providers/lost_item_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/menu_drawer.dart';
 import '../widgets/bottom_navbar.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 class DescribeItemScreen extends StatefulWidget {
-  const DescribeItemScreen({Key? key}) : super(key: key);
+
+  final Function(int)? onNavItemSelected;
+  const DescribeItemScreen({Key? key, this.onNavItemSelected}) : super(key: key);
+
 
   @override
   _DescribeItemScreenState createState() => _DescribeItemScreenState();
@@ -72,28 +77,31 @@ class _DescribeItemScreenState extends State<DescribeItemScreen> {
   }
 
   void _handleNavTap(int index) {
-    if (index == _currentNavIndex) return;
+    if(index != 1){
+      Navigator.pop(context);
+      widget.onNavItemSelected?.call(index);
+    }
 
+    /*
     setState(() {
       _currentNavIndex = index;
       if (isMenuOpen) _toggleMenu();
     });
-
     // Handle navigation based on the selected tab
     switch (index) {
       case 0: // Search
-        Navigator.pushReplacementNamed(context, '/search');
+        Navigator.pushNamed(context, '/search');
         break;
       case 1: // Home
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.pushNamed(context, '/home');
         break;
       case 2: // Notifications
-        Navigator.pushReplacementNamed(context, '/notifications');
+        Navigator.pushNamed(context, '/notifications');
         break;
       case 3: // Profile
-        Navigator.pushReplacementNamed(context, '/profile');
+        Navigator.pushNamed(context, '/profile');
         break;
-    }
+    }*/
   }
 
   @override
@@ -101,7 +109,7 @@ class _DescribeItemScreenState extends State<DescribeItemScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final darkMode = themeProvider.isDarkMode;
     return Scaffold(
-      backgroundColor: const Color(0xFFE6F0FA), // Light blue pastel background
+      backgroundColor: darkMode ? const Color(0xFF1B262C): const Color(0xFFE6F0FA), // Light blue pastel background
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -302,10 +310,10 @@ class _DescribeItemScreenState extends State<DescribeItemScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: _currentNavIndex,
+      /*bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: 1,
         onTap: _handleNavTap,
-      ),
+      ),*/
     );
   }
 }

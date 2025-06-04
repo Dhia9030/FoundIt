@@ -1,9 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:foundita/widgets/menu_drawer.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:foundita/providers/profile_provider.dart';
 import 'package:foundita/widgets/image_widget.dart';
+import 'package:foundita/widgets/bottom_navbar.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -13,6 +17,8 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  int _currentNavIndex = 1;
+  bool isMenuOpen = false;
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -51,17 +57,86 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     }
   }
+  void _toggleMenu() {
+    setState(() => isMenuOpen = !isMenuOpen);
+  }
+
+  void _handleNavTap(int index) {
+    if (index == _currentNavIndex) return;
+
+    setState(() {
+      _currentNavIndex = index;
+      if (isMenuOpen) _toggleMenu();
+    });
+
+    // Handle navigation based on the selected tab
+    switch (index) {
+      case 0: // Search
+        Navigator.pushReplacementNamed(context, '/search');
+        break;
+      case 1: // Home
+        Navigator.pushReplacementNamed(context, '/home');
+        break;
+      case 2: // Notifications
+        Navigator.pushReplacementNamed(context, '/notifications');
+        break;
+      case 3: // Profile
+        Navigator.pushReplacementNamed(context, '/profile');
+        break;
+    }
+  }
+
+  // Add this method inside your _ProfileScreenState class, after the build method
+Widget _buildInfoRow(String label, String value, IconData icon, Color valueColor, Color labelColor) {
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Icon(icon, size: 20, color: valueColor),
+      const SizedBox(width: 12),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: labelColor,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: valueColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
+}
 
   @override
   Widget build(BuildContext context) {
+        final themeProvider = Provider.of<ThemeProvider>(context);
+    final darkMode = themeProvider.isDarkMode;
+    final textColor = darkMode ? Colors.black87 : Colors.black87;
+final labelColor = darkMode ? Colors.white54 : Colors.black54;
     return Scaffold(
-      backgroundColor: const Color(0xFFE6F0FA), // Light blue pastel background
+      backgroundColor: darkMode ? const Color(0xFF1B262C) : const Color(0xFFE6F0FA), // Light blue pastel background
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+        title: Text('Profile',
+        style: TextStyle(
+          color: darkMode ? Colors.white : Colors.black,
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
         ),
-        title: const Text('Profile'),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         titleTextStyle: const TextStyle(
@@ -143,7 +218,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Container(
                     padding: const EdgeInsets.all(16.0),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: darkMode? const Color(0xFF0e1214):const Color(0xFFEBFFFE),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
@@ -250,7 +325,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     borderSide: BorderSide.none,
                                   ),
                                   filled: true,
-                                  fillColor: const Color(0xFFF5F7FF),
+                                  fillColor: darkMode? const Color(0xFF19252B):const Color(0xFFE6F0FA),
                                 ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
@@ -269,7 +344,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     borderSide: BorderSide.none,
                                   ),
                                   filled: true,
-                                  fillColor: const Color(0xFFF5F7FF),
+                                  fillColor: darkMode? const Color(0xFF19252B):const Color(0xFFE6F0FA),
                                 ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
@@ -279,31 +354,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 },
                               ),
                               const SizedBox(height: 16.0),
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  'Email: ${user.email}',
-                                  style: const TextStyle(
-                                      fontSize: 16, color: Colors.black87),
-                                ),
-                              ),
-                              const SizedBox(height: 8.0),
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  'Auth Method: ${user.authMethod.name}',
-                                  style: const TextStyle(
-                                      fontSize: 16, color: Colors.black87),
-                                ),
-                              ),
-                              const SizedBox(height: 8.0),
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  'Banned: ${user.isBanned ? 'Yes' : 'No'}',
-                                  style: const TextStyle(
-                                      fontSize: 16, color: Colors.black87),
-                                ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildInfoRow('Email', user.email, Icons.email_outlined, textColor, labelColor),
+                                  const SizedBox(height: 12.0),
+                                  _buildInfoRow('Auth Method', user.authMethod.name, Icons.security_outlined, textColor, labelColor),
+                                  const SizedBox(height: 12.0),
+                                  _buildInfoRow('Status', user.isBanned ? 'Banned' : 'Active', 
+                                      user.isBanned ? Icons.block : Icons.verified_user,
+                                      user.isBanned ? Colors.redAccent : (darkMode ? Colors.lightGreenAccent : Colors.green),
+                                      labelColor),
+                                ],
                               ),
                               const SizedBox(height: 24.0),
                               Center(
@@ -337,8 +399,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           );
+          
+          
         },
       ),
+      /*bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: _currentNavIndex,
+        onTap: _handleNavTap,
+      ),*/
     );
   }
 }

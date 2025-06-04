@@ -19,7 +19,8 @@ import 'package:foundita/services/usermanagement_service.dart';
 import 'package:provider/provider.dart';
 import 'providers/theme_provider.dart';
 import 'screens/home_screen.dart';
-import 'screens/notifications_screen.dart'; // Make sure this imports your updated notifications_screen.dart
+import 'screens/notifications_screen.dart'; 
+import 'screens/search_screen.dart';
 import 'screens/report_lost_screen.dart';
 import 'screens/usermanagement_screen.dart';
 import 'widgets/bottom_navbar.dart';
@@ -38,13 +39,13 @@ import 'providers/profile_provider.dart';
 import 'screens/profile_screen.dart';
 import 'package:foundita/providers/dashboard_provider.dart';
 import 'package:foundita/services/dashboard_service.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // Import the new notification files
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'providers/notification_provider.dart'; // <--- NEW
-import 'services/notification_service.dart';   // <--- NEW
-
+import 'providers/notification_provider.dart'; 
+import 'services/notification_service.dart';   
 
 // This needs to be a top-level function for Firebase Messaging background messages
 // It must be outside any class.
@@ -185,12 +186,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final themeData = themeProvider.themeData;
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: Provider.of<ThemeProvider>(context).themeData,
+      theme:themeData.copyWith(
+        textTheme: GoogleFonts.montserratTextTheme(themeData.textTheme),
+        primaryTextTheme: GoogleFonts.montserratTextTheme(themeData.primaryTextTheme),
+      ),
       home: const AuthWrapper(),
       routes: {
-        '/home': (context) => const HomePage(initialTabIndex: 1),
+        '/home': (context) =>   const HomePage(initialTabIndex: 1),
         '/search': (context) => const HomePage(initialTabIndex: 0),
         '/notifications': (context) => const NotificationsScreen(), // <--- USE YOUR NEW SCREEN
         '/profile': (context) => const ProfileScreen(),
@@ -224,9 +230,11 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late int _currentIndex;
   bool _isMenuOpen = false;
+    final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+
 
   final List<Widget> _pages = [
-    const Center(child: Text('Search Page')), // Index 0: Search
+    const FoundItemsMapPage(), // Index 0: Search
     HomeScreen(), // Index 1: Home
     const NotificationsScreen(), // Index 2: Notifications - <--- USE YOUR NEW SCREEN
     const ProfileScreen(), // Index 3: Profile
@@ -253,12 +261,20 @@ class _HomePageState extends State<HomePage> {
   void _handleNavTap(int index) {
     if (index == _currentIndex) return;
 
+    // If we're on a screen that's not in the main navigation
+    if (_navigatorKey.currentState?.canPop() ?? false) {
+      _navigatorKey.currentState?.pop(); // Close any modals/dialogs
+    }
     setState(() {
       _currentIndex = index;
       if (_isMenuOpen) _toggleMenu();
     });
 
-    switch (index) {
+
+      // If we're on a non-main page (like report lost), pop back to home first
+
+
+    /*switch (index) {
       case 0:
         Navigator.pushNamed(context, '/search');
         break;
@@ -266,8 +282,6 @@ class _HomePageState extends State<HomePage> {
         Navigator.pushNamed(context, '/home');
         break;
       case 2:
-        // Direct navigation to the NotificationsScreen route
-        // This is important because NotificationsScreen is a full page
         Navigator.pushNamed(context, '/notifications');
         break;
       case 3:
@@ -276,7 +290,7 @@ class _HomePageState extends State<HomePage> {
       case 4:
         Navigator.pushNamed(context, '/register');
         break;
-    }
+    }*/
   }
 
   @override
@@ -324,7 +338,7 @@ class AuthWrapper extends StatelessWidget {
           // User is logged in, ensure FCM token is registered/updated
           // The NotificationProvider's constructor now handles this when authStateChanges() fires
           // No need to call updateFCMTokenForUser here directly if NotificationProvider handles it
-          return const HomePage();
+          return  HomePage(initialTabIndex : 1);
         }
         return const LoginScreen();
       },

@@ -3,6 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import 'report_lost_screen.dart'; // Import the describe item screen
+import 'report_found_screen.dart'; // Import the report found item screen
+import '../widgets/bottom_navbar.dart';
 
 class HomeScreen extends StatelessWidget {
   @override
@@ -48,47 +50,55 @@ class HomeScreen extends StatelessWidget {
           Positioned(
             top: 260,
             right: -30,
-            child: Container(
-              width: 300,
-              height: 143,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: ShapeDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment(1.37, 0.21),
-                  end: Alignment(0.30, 0.72),
-                  colors: [const Color(0xFF7996FF), const Color(0xFF415FCC)],
-                ),
-                shape: RoundedRectangleBorder(
-                  side: BorderSide(width: 1),
-                  borderRadius: BorderRadius.circular(35),
-                ),
-                shadows: [
-                  BoxShadow(
-                    color: Color(0x3F535353),
-                    blurRadius: 4,
-                    offset: Offset(15, 15),
-                    spreadRadius: 0,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ReportFoundItemScreen()),
+                );
+              },
+              child: Container(
+                width: 300,
+                height: 143,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: ShapeDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment(1.37, 0.21),
+                    end: Alignment(0.30, 0.72),
+                    colors: [const Color(0xFF7996FF), const Color(0xFF415FCC)],
                   ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(width: 8),
-                  Text.rich(
-                    TextSpan(
-                      text: 'Report Found Item',
-                      style: TextStyle(
-                          fontSize: 22,
-                          fontFamily: 'Montserrat',
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white
+                  shape: RoundedRectangleBorder(
+                    side: BorderSide(width: 1),
+                    borderRadius: BorderRadius.circular(35),
+                  ),
+                  shadows: [
+                    BoxShadow(
+                      color: Color(0x3F535353),
+                      blurRadius: 4,
+                      offset: Offset(15, 15),
+                      spreadRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(width: 8),
+                    Text.rich(
+                      TextSpan(
+                        text: 'Report Found Item',
+                        style: TextStyle(
+                            fontSize: 22,
+                            fontFamily: 'Montserrat',
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -252,7 +262,9 @@ class HomeScreen extends StatelessWidget {
                 // Navigate to the DescribeItemScreen when this button is tapped
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => DescribeItemScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => DescribeItemScreen(),
+                  ),
                 );
               },
               child: Container(

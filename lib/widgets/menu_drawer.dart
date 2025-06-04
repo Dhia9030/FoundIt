@@ -134,15 +134,15 @@ class _MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateM
                       await FirebaseAuth.instance.signOut();
                       // Navigate to login screen and remove all previous routes
                       Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (context) => const LoginScreen()),
-                      (Route<dynamic> route) => false,
+                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        (Route<dynamic> route) => false,
                       );
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Logout failed: ${e.toString()}')),
+                        SnackBar(content: Text('Logout failed: ${e.toString()}')),
                       );
                     }
-                    },
+                  },
                 ),
               ],
             ),
@@ -203,10 +203,10 @@ class _MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateM
             Text(
               text,
               style: TextStyle(
-                  color: textColor,
-                  fontSize: 16,
-                  fontFamily: 'Montserrat',
-                  fontWeight: FontWeight.w900
+                color: textColor,
+                fontSize: 16,
+                fontFamily: 'Montserrat',
+                fontWeight: FontWeight.w900,
               ),
             ),
             if (trailing != null) ...[const Spacer(), trailing]
