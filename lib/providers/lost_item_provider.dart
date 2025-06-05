@@ -20,7 +20,6 @@ class LostItemProvider with ChangeNotifier {
   String? get error => _error;
   List<LostItem> get lostItems => _lostItems;
 
-
   Future<void> reportLostItem({
     required String userId,
     required String itemName,
@@ -37,13 +36,15 @@ class LostItemProvider with ChangeNotifier {
       _isLoading = true;
       _error = null;
       notifyListeners();
+      print(
+          "reporting lost item from provider: $itemName, type: $type, description: $description, color: $color, date: $date, latitude: $latitude, longitude: $longitude, lostDate: $lostDate");
 
       dynamic imageData;
       if (imageFile != null) {
         if (kIsWeb) {
-          imageData = await imageFile.readAsBytes(); 
+          imageData = await imageFile.readAsBytes();
         } else {
-          imageData = File(imageFile.path); 
+          imageData = File(imageFile.path);
         }
       }
 
@@ -75,7 +76,6 @@ class LostItemProvider with ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-
       final items = await _lostItemService.getLostItems().first;
       _lostItems = items;
     } catch (e) {
@@ -86,7 +86,6 @@ class LostItemProvider with ChangeNotifier {
       notifyListeners();
     }
   }
-
 
   Future<List<LostItem>> getLostItemsByLocation(String locationId) async {
     try {
@@ -104,14 +103,12 @@ class LostItemProvider with ChangeNotifier {
     }
   }
 
-
   Future<void> updateFoundStatus(String itemId, bool isFound) async {
     try {
       _isLoading = true;
       notifyListeners();
 
       await _lostItemService.updateFoundStatus(itemId, isFound);
-      
 
       final index = _lostItems.indexWhere((item) => item.itemId == itemId);
       if (index != -1) {
@@ -126,14 +123,12 @@ class LostItemProvider with ChangeNotifier {
     }
   }
 
-
   Future<void> deleteLostItem(String itemId) async {
     try {
       _isLoading = true;
       notifyListeners();
 
       await _lostItemService.deleteLostItem(itemId);
-      
 
       _lostItems.removeWhere((item) => item.itemId == itemId);
     } catch (e) {

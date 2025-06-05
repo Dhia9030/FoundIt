@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:foundita/screens/where_found_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../providers/theme_provider.dart';
@@ -7,9 +8,13 @@ import '../providers/lost_item_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/menu_drawer.dart';
 import '../widgets/bottom_navbar.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 class DescribeItemScreen extends StatefulWidget {
-  const DescribeItemScreen({Key? key}) : super(key: key);
+  final Function(int)? onNavItemSelected;
+  const DescribeItemScreen({Key? key, this.onNavItemSelected})
+      : super(key: key);
 
   @override
   _DescribeItemScreenState createState() => _DescribeItemScreenState();
@@ -47,7 +52,8 @@ class _DescribeItemScreenState extends State<DescribeItemScreen> {
 
   Future<void> _pickImageFromGallery() async {
     try {
-      final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+      final XFile? pickedFile =
+          await _picker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
         setState(() => _selectedImage = File(pickedFile.path));
       }
@@ -64,6 +70,16 @@ class _DescribeItemScreenState extends State<DescribeItemScreen> {
       });
     } else {
       print("Post button tapped with: ${_descriptionController.text}");
+      // From DescribeItemScreen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => WhereFoundScreen(itemData: {
+            'description': _descriptionController.text,
+            'image': _selectedImage?.path,
+          }),
+        ),
+      );
     }
   }
 
@@ -72,157 +88,121 @@ class _DescribeItemScreenState extends State<DescribeItemScreen> {
   }
 
   void _handleNavTap(int index) {
-    if (index == _currentNavIndex) return;
+    if (index != 1) {
+      Navigator.pop(context);
+      widget.onNavItemSelected?.call(index);
+    }
 
+    /*
     setState(() {
       _currentNavIndex = index;
       if (isMenuOpen) _toggleMenu();
     });
-
     // Handle navigation based on the selected tab
     switch (index) {
       case 0: // Search
-        Navigator.pushReplacementNamed(context, '/search');
+        Navigator.pushNamed(context, '/search');
         break;
       case 1: // Home
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.pushNamed(context, '/home');
         break;
       case 2: // Notifications
-        Navigator.pushReplacementNamed(context, '/notifications');
+        Navigator.pushNamed(context, '/notifications');
         break;
       case 3: // Profile
-        Navigator.pushReplacementNamed(context, '/profile');
+        Navigator.pushNamed(context, '/profile');
         break;
-    }
+    }*/
   }
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final darkMode = themeProvider.isDarkMode;
-    final backgroundColor = darkMode ? const Color(0xFF1B262C) : const Color(0xFFD1ECFF);
-
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: darkMode
+          ? const Color(0xFF1B262C)
+          : const Color(0xFFE6F0FA), // Light blue pastel background
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text('Describe Your Item'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        titleTextStyle: const TextStyle(
+          color: Colors.black,
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
       body: Stack(
         children: [
-          // Background blobs
-          Positioned(
-            top: -100,
-            right: -100,
-            child: Image.asset(
-              darkMode ? 'assets/images/blob-1.png' : 'assets/images/blob2-1.png',
-              width: 300,
-              height: 300,
-            ),
-          ),
-          Positioned(
-            bottom: -100,
-            left: -100,
-            child: Image.asset(
-              darkMode ? 'assets/images/blob-3.png' : 'assets/images/blob2-3.png',
-              width: 300,
-              height: 300,
-            ),
-          ),
-
-          // Main content with SingleChildScrollView
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.only(top: 70, bottom: 0), // Added extra bottom padding for navbar
+              padding: const EdgeInsets.only(
+                  top: 0, bottom: 60), // Adjusted for navbar
               child: SingleChildScrollView(
-
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFCDDDFF),
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
+                  padding: const EdgeInsets.all(16.0),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(16.0),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Back button and progress bar
-                          Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () => Navigator.pop(context),
-                                child: const Icon(Icons.arrow_back, size: 34, color: Colors.black),
-                              ),
-                              const SizedBox(width: 40),
-                              Expanded(
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: Container(
+                          // Progress bar
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Container(
+                              height: 8,
+                              color: const Color(0xFFF5F7FF),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width:
+                                        MediaQuery.of(context).size.width * 0.3,
                                     height: 8,
-                                    color: Colors.white,
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          width: MediaQuery.of(context).size.width * 0.3,
-                                          height: 8,
-                                          color: const Color(0xFF3694FF),
-                                        ),
-                                      ],
-                                    ),
+                                    color: const Color(0xFF6C63FF),
                                   ),
-                                ),
+                                ],
                               ),
-                              const SizedBox(width: 50)
-                            ],
-                          ),
-
-                          const SizedBox(height: 20),
-
-                          // Title
-                          Text(
-                            "Describe Your Item",
-                            style: GoogleFonts.urbanist(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF1B262C),
                             ),
                           ),
-
                           const SizedBox(height: 20),
-
                           // Description text field
                           GestureDetector(
-                            onTap: () => FocusScope.of(context).requestFocus(_descriptionFocusNode),
+                            onTap: () => FocusScope.of(context)
+                                .requestFocus(_descriptionFocusNode),
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 300),
                               height: 200,
                               decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: _showError
                                       ? Colors.red
                                       : _isDescriptionFocused
-                                      ? const Color(0xFF3694FF)
-                                      : Colors.transparent,
-                                  width: _isDescriptionFocused || _showError ? 2.5 : 0.0,
+                                          ? const Color(0xFF6C63FF)
+                                          : Colors.transparent,
+                                  width: _isDescriptionFocused || _showError
+                                      ? 2.5
+                                      : 0.0,
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: _isDescriptionFocused
-                                        ? const Color(0xFF3694FF).withOpacity(0.4)
-                                        : Colors.black.withOpacity(0.05),
-                                    blurRadius: _isDescriptionFocused ? 12 : 5,
-                                    spreadRadius: _isDescriptionFocused ? 2 : 0,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ],
+                                color: const Color(0xFFF5F7FF),
                               ),
                               child: TextField(
                                 controller: _descriptionController,
@@ -245,10 +225,10 @@ class _DescribeItemScreenState extends State<DescribeItemScreen> {
                               ),
                             ),
                           ),
-
                           if (_showError)
                             Padding(
-                              padding: const EdgeInsets.only(top: 8.0, left: 8.0),
+                              padding:
+                                  const EdgeInsets.only(top: 8.0, left: 8.0),
                               child: Text(
                                 _errorMessage,
                                 style: GoogleFonts.urbanist(
@@ -258,85 +238,75 @@ class _DescribeItemScreenState extends State<DescribeItemScreen> {
                                 ),
                               ),
                             ),
-
                           SizedBox(height: _showError ? 8.0 : 20.0),
-
                           Text(
                             "optional",
                             style: GoogleFonts.urbanist(
                               fontSize: 16,
-                              color: const Color(0xFF1B262C),
+                              color: Colors.black87,
                             ),
                           ),
-
                           const SizedBox(height: 10),
-
                           GestureDetector(
                             onTap: _pickImageFromGallery,
                             child: Container(
                               height: 150,
                               decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 5,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ],
+                                color: const Color(0xFFF5F7FF),
+                                borderRadius: BorderRadius.circular(12),
                               ),
                               child: _selectedImage != null
                                   ? ClipRRect(
-                                borderRadius: BorderRadius.circular(20),
-                                child: Image.file(
-                                  _selectedImage!,
-                                  fit: BoxFit.cover,
-                                ),
-                              )
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Image.file(
+                                        _selectedImage!,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    )
                                   : Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.image_outlined,
-                                      color: Colors.grey.shade400,
-                                      size: 40,
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Text(
-                                      "Select file",
-                                      style: GoogleFonts.urbanist(
-                                        color: Colors.grey,
-                                        fontSize: 20,
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.image_outlined,
+                                            color: Colors.grey.shade400,
+                                            size: 40,
+                                          ),
+                                          const SizedBox(height: 10),
+                                          Text(
+                                            "Select file",
+                                            style: GoogleFonts.urbanist(
+                                              color: Colors.grey,
+                                              fontSize: 20,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ),
                             ),
                           ),
-
                           const SizedBox(height: 20),
-
-                          SizedBox(
-                            width: double.infinity,
-                            height: 60,
-                            child: ElevatedButton(
-                              onPressed: _validateAndPost,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF3694FF),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
+                          Center(
+                            child: SizedBox(
+                              width: 200,
+                              child: ElevatedButton(
+                                onPressed: _validateAndPost,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF6C63FF),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 12),
                                 ),
-                                elevation: 5,
-                              ),
-                              child: Text(
-                                "Post",
-                                style: GoogleFonts.urbanist(
-                                  color: Colors.white,
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.w600,
+                                child: Text(
+                                  "Post",
+                                  style: GoogleFonts.urbanist(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                             ),
@@ -349,24 +319,22 @@ class _DescribeItemScreenState extends State<DescribeItemScreen> {
               ),
             ),
           ),
-
           if (isMenuOpen)
             GestureDetector(
               onTap: _toggleMenu,
               behavior: HitTestBehavior.opaque,
               child: Container(color: Colors.black.withOpacity(0.5)),
             ),
-
           MenuDrawer(
             isMenuOpen: isMenuOpen,
             onMenuToggle: _toggleMenu,
           ),
         ],
       ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: _currentNavIndex,
+      /*bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: 1,
         onTap: _handleNavTap,
-      ),
+      ),*/
     );
   }
 }

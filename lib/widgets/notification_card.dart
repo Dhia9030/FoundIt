@@ -1,168 +1,88 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../models/mock_notification.dart';
-import '../screens/chat_screen.dart';
-import '../models/conversation.dart';// Ensure this import is correct
+import '../models/app_notification.dart';
 
 class NotificationCard extends StatelessWidget {
-  final MockNotification notification;
+  final AppNotification notification;
   final VoidCallback onTap;
+  final bool darkMode;
 
   const NotificationCard({
     Key? key,
     required this.notification,
     required this.onTap,
+    required this.darkMode,
   }) : super(key: key);
+
+  String _formatTimestamp(DateTime timestamp) {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final bool isFoundItem = notification.type == 'FOUND_YOUR_ITEM';
-    final Color cardColor = isFoundItem
-        ? const Color(0xFFEDFFE7).withOpacity(0.9)
-        : const Color(0xFFEBE7FF).withOpacity(0.9);
-    final Color checkColor = isFoundItem
-        ? const Color(0xFF0BD62A)
-        : const Color(0xFF5233EB);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+      color: notification.isRead
+          ? (darkMode ? Color(0xFF28353A) : Colors.white)
+          : (darkMode ? Color(0xFF1F2E35) : Color(0xFFE0F2F7)),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () async {
-            try {
-              // final conversationProvider = Provider.of<ConversationProvider>(
-              //   context,
-              //   listen: false,
-              // );
-
-              // Create a new conversation or get existing one
-              final conversation = Conversation(
-                id: 'conv_${notification.id}',
-                notificationId: notification.id,
-                participant1Id: 'current_user_id', // Replace with actual user ID
-                participant2Id: notification.senderId,
-                itemId: notification.itemId,
-                messages: [
-                  Message(
-                    id: '1',
-                    senderId: notification.senderId,
-                    content: isFoundItem
-                        ? "Hello! I think I found your item"
-                        : "Hello! I'm looking for a similar item",
-                    timestamp: DateTime.now(),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(15),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      notification.title,
+                      style: GoogleFonts.urbanist(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: darkMode ? Colors.white : Colors.black,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _formatTimestamp(notification.timestamp),
+                    style: GoogleFonts.urbanist(
+                      fontSize: 12,
+                      color: darkMode ? Colors.grey[400] : Colors.grey[700],
+                    ),
                   ),
                 ],
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-              );
-
-              // Navigate to chat screen
-              /* Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChatScreen(
-                    conversationId: conversation.id,
-                    notificationId: notification.id,
-                  ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                notification.body,
+                style: GoogleFonts.urbanist(
+                  fontSize: 14,
+                  color: darkMode ? Colors.grey[300] : Colors.grey[800],
                 ),
-              ); */
-            } catch (e) {
-              print('Error navigating to chat: $e');
-            }
-
-            onTap();
-          },
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    // Profile image with error handling
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundImage: AssetImage('assets/images/profile.png'),
-
-                    ),
-                    const SizedBox(width: 12),
-
-                    // Notification text
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          RichText(
-                            text: TextSpan(
-                              style: GoogleFonts.urbanist(
-                                fontSize: 16,
-                                color: Colors.black,
-                              ),
-                              children: [
-                                TextSpan(
-                                  text: "Dhia ",
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                TextSpan(
-                                  text: isFoundItem
-                                      ? "most likely found your lost item : "
-                                      : "is looking for the item : ",
-                                ),
-                                TextSpan(
-                                  text: isFoundItem ? "Jacket" : "Mobile Phone",
-                                  style: const TextStyle(fontWeight: FontWeight.w900),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Check icon
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: checkColor,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.check,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 8),
-
-                // Chat prompt
-                Center(
-                  child: Text(
-                    "Tap to chat with him",
-                    style: GoogleFonts.urbanist(
-                      fontSize: 16,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
         ),
       ),

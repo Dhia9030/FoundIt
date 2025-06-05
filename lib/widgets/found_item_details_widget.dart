@@ -3,7 +3,9 @@ import 'package:foundita/models/found_item.dart';
 import 'package:foundita/services/usermanagement_service.dart';
 import 'package:foundita/widgets/image_widget.dart';
 import 'package:intl/intl.dart';
-import 'package:foundita/models/user.dart'; // Import User model
+import 'package:foundita/models/user.dart' as app_user;
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth; // <--- ADD THIS IMPORT
+import 'package:foundita/screens/chat_screen.dart'; // <--- ADD THIS IMPORT
 
 class FoundItemDetailsScreen extends StatefulWidget {
   final FoundItem item;
@@ -16,7 +18,7 @@ class FoundItemDetailsScreen extends StatefulWidget {
 
 class _FoundItemDetailsScreenState extends State<FoundItemDetailsScreen> {
   final UserManagementService _userService = UserManagementService();
-  User? _reporter;
+  app_user.User? _reporter;
   bool _isLoadingUser = true;
   String? _userError;
 
@@ -47,6 +49,11 @@ class _FoundItemDetailsScreenState extends State<FoundItemDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Get the current user's ID
+    final currentUserId = firebase_auth.FirebaseAuth.instance.currentUser?.uid;
+    // Check if the current user is the one who reported the item
+    final isCurrentUserReporter = currentUserId == widget.item.userId;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Item Details'),
@@ -66,6 +73,7 @@ class _FoundItemDetailsScreenState extends State<FoundItemDetailsScreen> {
                 padding: const EdgeInsets.only(bottom: 16.0),
                 child: SizedBox(
                   width: double.infinity,
+                  height: 250, // Added a height for consistent image display
                   child: ImageFromBackend(blobName: widget.item.photo, fit: BoxFit.cover),
                 ),
               ),
@@ -109,12 +117,59 @@ class _FoundItemDetailsScreenState extends State<FoundItemDetailsScreen> {
             if (_isLoadingUser)
               const CircularProgressIndicator()
             else if (_userError != null)
-              Text(_userError!, style: TextStyle(color: Colors.red))
-            else if (_reporter != null && _reporter!.name != null) // Assuming your User model has a 'name' property
+              Text(_userError!, style: const TextStyle(color: Colors.red))
+            else if (_reporter != null && _reporter!.name != null)
               Text(_reporter!.name!, style: Theme.of(context).textTheme.bodyLarge)
             else
               Text('Reporter information not available', style: Theme.of(context).textTheme.bodyLarge),
             const SizedBox(height: 20),
+
+            // --- ADD THIS BLOCK ---
+            (currentUserId != null && !isCurrentUserReporter)
+                ? Column(
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          // Navigate to the ChatScreen, passing the reporter's userId
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChatScreen(otherUserId: widget.item.userId),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.chat),
+                        label: const Text('Chat with Reporter'),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 50), // Make button wide
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16), // Space after the button
+                    ],
+                  )
+                : (currentUserId != null && isCurrentUserReporter)
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 16.0),
+                        child: Text(
+                          'You reported this item.',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                    : Padding(
+                        padding: const EdgeInsets.only(top: 16.0),
+                        child: Text(
+                          'Log in to chat with the reporter.',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+            // --- END ADDITION ---
+
+            const SizedBox(height: 16), // Final spacing
           ],
         ),
       ),

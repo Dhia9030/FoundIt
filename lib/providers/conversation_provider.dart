@@ -15,14 +15,14 @@ class ConversationProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   String? get currentChatId => _currentChatId;
-
   Future<void> fetchConversations(String userId) async {
     _isLoading = true;
     notifyListeners();
 
     try {
       // Simulate API call
-      await Future.delayed(Duration(seconds: 1));
+      await Future.delayed(const Duration(
+          seconds: 1)); // Consider removing this delay in production
 
       // Mock data - in real app, this would come from backend
       _conversations = [
@@ -37,10 +37,10 @@ class ConversationProvider extends ChangeNotifier {
               id: '1',
               senderId: 'user1',
               content: 'Hello, I think I found your wallet!',
-              timestamp: DateTime.now().subtract(Duration(minutes: 30)),
+              timestamp: DateTime.now().subtract(const Duration(minutes: 30)),
             )
           ],
-          createdAt: DateTime.now().subtract(Duration(days: 1)),
+          createdAt: DateTime.now().subtract(const Duration(days: 1)),
           updatedAt: DateTime.now(),
         ),
       ];
@@ -54,42 +54,16 @@ class ConversationProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> sendMessage(
-      String conversationId, String senderId, String content) async {
-    _isLoading = true;
-    notifyListeners();
-
-    try {
-      final newMessage = Message(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        senderId: senderId,
-        content: content,
-        timestamp: DateTime.now(),
-      );
-
-      _conversations = _conversations.map((c) {
-        if (c.id == conversationId) {
-          return Conversation(
-            id: c.id,
-            notificationId: c.notificationId,
-            participant1Id: c.participant1Id,
-            participant2Id: c.participant2Id,
-            itemId: c.itemId,
-            messages: [...c.messages, newMessage],
-            createdAt: c.createdAt,
-            updatedAt: DateTime.now(),
-          );
-        }
-        return c;
-      }).toList();
-
-      _isLoading = false;
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
+  Future<void> sendMessage(String content, String senderId) async {
+    if (_currentChatId == null) {
+      print('Error: Attempted to send message before chat ID was set.');
+      return;
     }
+    await _chatService.sendMessage(
+      chatId: _currentChatId!,
+      senderId: senderId,
+      content: content,
+    );
   }
 
   void handleIncomingMessage(Message message, String conversationId) {
@@ -112,12 +86,17 @@ class ConversationProvider extends ChangeNotifier {
   }
 
   Future<void> startChat(String user1Id, String user2Id) async {
-    _currentChatId = await _chatService.getOrCreateChat(user1Id, user2Id);
-    notifyListeners();
+    // Only fetch/create chat ID if it's not already set
+    if (_currentChatId == null || _currentChatId!.isEmpty) {
+      _currentChatId = await _chatService.getOrCreateChat(user1Id, user2Id);
+      notifyListeners(); // Notify listeners that _currentChatId has changed
+    }
   }
 
   Stream<QuerySnapshot> get messages {
-    if (_currentChatId == null) return const Stream.empty();
+    if (_currentChatId == null || _currentChatId!.isEmpty) {
+      return const Stream.empty();
+    }
     return _chatService.getMessages(_currentChatId!);
   }
 }

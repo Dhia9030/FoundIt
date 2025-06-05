@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' hide Category ;
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:foundita/models/item.dart';
@@ -64,7 +64,8 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _foundItemsProvider = Provider.of<FoundItemProvider>(context, listen: false);
+      _foundItemsProvider =
+          Provider.of<FoundItemProvider>(context, listen: false);
 
       _initializeMapData();
     });
@@ -83,7 +84,8 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
     try {
       final List<FoundItemPopulated> items = [itemPopulated2, itemPopulated];
       await _foundItemsProvider.fetchPopulatedItems();
-      final List<FoundItemPopulated> fetchedItems = _foundItemsProvider.populatedItems;
+      final List<FoundItemPopulated> fetchedItems =
+          _foundItemsProvider.populatedItems;
       _itemMarkers = await _createItemMarkers(context, fetchedItems);
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -108,7 +110,8 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
     }
   }
 
-  Future<List<Marker>> _createItemMarkers(BuildContext context, List<FoundItemPopulated> items) async {
+  Future<List<Marker>> _createItemMarkers(
+      BuildContext context, List<FoundItemPopulated> items) async {
     final markers = <Marker>[];
     for (final item in items) {
       try {
@@ -124,7 +127,10 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 2),
                   boxShadow: const [
-                    BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+                    BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 4,
+                        offset: Offset(0, 2)),
                   ],
                 ),
                 child: ClipOval(
@@ -235,7 +241,6 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
     );
   }
 
-
   void _showClaimItemDialog(BuildContext context, FoundItemPopulated item) {
     showDialog(
       context: context,
@@ -247,7 +252,8 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
             controller: _controller,
             maxLines: 5,
             decoration: const InputDecoration(
-              hintText: 'Describe the item and why you think it belongs to you...',
+              hintText:
+                  'Describe the item and why you think it belongs to you...',
               border: OutlineInputBorder(),
             ),
           ),
@@ -261,7 +267,8 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
                 final message = _controller.text.trim();
                 if (message.isNotEmpty) {
                   // send request logic here
-                  print("Sending claim request: $message, to user : ${item.userId}");
+                  print(
+                      "Sending claim request: $message, to user : ${item.userId}");
                   Navigator.of(context).pop();
                 }
               },
@@ -280,105 +287,110 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Stack(
-        children: [
-          FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: LatLng(36.8065, 10.1815),
-              initialZoom: 10.0,
-              onMapReady: () {
-                if (_itemMarkers.isEmpty) {
-                  _mapController.move(LatLng(36.8065, 10.1815), 10.0);
-                } else {
-                  _mapController.move(_itemMarkers.first.point, 12.0);
-                }
-              },
-            ),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.example.foundita',
-                errorTileCallback: (tile, error, stackTrace) {
-                  print('Tile loading error: $error');
-                },
-              ),
-              MarkerLayer(markers: _itemMarkers),
-            ],
-          ),
-          Positioned(
-            top: 20,
-            left: 20,
-            right: 20,
-            child: Container(
-              height: 50,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.8),
-                borderRadius: BorderRadius.circular(8.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
+              children: [
+                FlutterMap(
+                  mapController: _mapController,
+                  options: MapOptions(
+                    initialCenter: LatLng(36.8065, 10.1815),
+                    initialZoom: 10.0,
+                    onMapReady: () {
+                      if (_itemMarkers.isEmpty) {
+                        _mapController.move(LatLng(36.8065, 10.1815), 10.0);
+                      } else {
+                        _mapController.move(_itemMarkers.first.point, 12.0);
+                      }
+                    },
                   ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  DropdownButton<String>(
-                    value: _selectedSearchType ?? 'ariana',
-                    icon: const Icon(Icons.arrow_drop_down),
-                    underline: const SizedBox(),
-                    items: const [
-                      DropdownMenuItem(value: 'ariana', child: Text('Ariana')),
-                      DropdownMenuItem(value: 'tunis', child: Text('Tunis')),
-                      DropdownMenuItem(value: 'beja', child: Text('Beja')),
-                    ],
-                    onChanged: _handleSearchTypeChange,
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.example.foundita',
+                      errorTileCallback: (tile, error, stackTrace) {
+                        print('Tile loading error: $error');
+                      },
+                    ),
+                    MarkerLayer(markers: _itemMarkers),
+                  ],
+                ),
+                Positioned(
+                  top: 20,
+                  left: 20,
+                  right: 20,
+                  child: Container(
+                    height: 50,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(8.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        DropdownButton<String>(
+                          value: _selectedSearchType ?? 'ariana',
+                          icon: const Icon(Icons.arrow_drop_down),
+                          underline: const SizedBox(),
+                          items: const [
+                            DropdownMenuItem(
+                                value: 'ariana', child: Text('Ariana')),
+                            DropdownMenuItem(
+                                value: 'tunis', child: Text('Tunis')),
+                            DropdownMenuItem(
+                                value: 'beja', child: Text('Beja')),
+                          ],
+                          onChanged: _handleSearchTypeChange,
+                        ),
+                        const VerticalDivider(width: 1),
+                        Expanded(
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText: 'Search for a place...',
+                              border: InputBorder.none,
+                              contentPadding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.search),
+                          onPressed: () {},
+                        ),
+                      ],
+                    ),
                   ),
-                  const VerticalDivider(width: 1),
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Search for a place...',
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                ),
+                if (_itemMarkers.isEmpty)
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(16.0),
+                      color: Colors.black54,
+                      child: const Text(
+                        'No found items available',
+                        style: TextStyle(color: Colors.white, fontSize: 18),
                       ),
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.search),
-                    onPressed: () {},
+                Positioned(
+                  bottom: 20,
+                  right: 20,
+                  child: FloatingActionButton.extended(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/report-lost');
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('Report Found Item'),
+                    backgroundColor: Theme.of(context).primaryColor,
                   ),
-                ],
-              ),
-            ),
-          ),
-          if (_itemMarkers.isEmpty)
-            Center(
-              child: Container(
-                padding: const EdgeInsets.all(16.0),
-                color: Colors.black54,
-                child: const Text(
-                  'No found items available',
-                  style: TextStyle(color: Colors.white, fontSize: 18),
                 ),
-              ),
+              ],
             ),
-          Positioned(
-            bottom: 20,
-            right: 20,
-            child: FloatingActionButton.extended(
-              onPressed: () {
-                Navigator.pushNamed(context, '/report-lost-test');
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Report Found Item'),
-              backgroundColor: Theme.of(context).primaryColor,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

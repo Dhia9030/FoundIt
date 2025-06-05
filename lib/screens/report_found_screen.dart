@@ -93,7 +93,8 @@ class _ReportFoundItemScreenState extends State<ReportFoundItemScreen> {
       if (_selectedLocation == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Please select the location of the found item on the map.'),
+            content: Text(
+                'Please select the location of the found item on the map.'),
           ),
         );
         return;
@@ -239,7 +240,8 @@ class _ReportFoundItemScreenState extends State<ReportFoundItemScreen> {
                     suffixIcon: Icon(Icons.calendar_today),
                   ),
                   controller: TextEditingController(
-                    text: '${_foundDate.day}/${_foundDate.month}/${_foundDate.year}',
+                    text:
+                        '${_foundDate.day}/${_foundDate.month}/${_foundDate.year}',
                   ),
                   onTap: () async {
                     final DateTime? picked = await showDatePicker(
@@ -286,37 +288,38 @@ class _ReportFoundItemScreenState extends State<ReportFoundItemScreen> {
                   child: Text('Pick Image'),
                 ),
                 if (_imageFile != null)
-  Container(
-    height: 150,
-    decoration: BoxDecoration(
-      border: Border.all(color: Colors.grey),
-      borderRadius: BorderRadius.circular(4),
-    ),
-    child: Stack(
-      children: [
-        Center(
-          child: Image.network( // ✅ This is web-compatible
-            _imageFile!.path,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) =>
-                Icon(Icons.image, size: 50),
-          ),
-        ),
-        Positioned(
-          top: 0,
-          right: 0,
-          child: IconButton(
-            icon: Icon(Icons.close, color: Colors.red),
-            onPressed: () {
-              setState(() {
-                _imageFile = null;
-              });
-            },
-          ),
-        ),
-      ],
-    ),
-  ),
+                  Container(
+                    height: 150,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Stack(
+                      children: [
+                        Center(
+                          child: Image.network(
+                            // ✅ This is web-compatible
+                            _imageFile!.path,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Icon(Icons.image, size: 50),
+                          ),
+                        ),
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: IconButton(
+                            icon: Icon(Icons.close, color: Colors.red),
+                            onPressed: () {
+                              setState(() {
+                                _imageFile = null;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () async {

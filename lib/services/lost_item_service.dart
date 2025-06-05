@@ -39,6 +39,8 @@ class LostItemService {
     required String userId,
   }) async {
     try {
+      print(
+          "Reporting lost item from service: $itemName, type: $type, description: $description, color: $color, date: $date, latitude: $latitude, longitude: $longitude, lostDate: $lostDate");
       // 1. Create or get location
       String locationId = await _locationService.addLocation(
         latitude: latitude,
@@ -49,8 +51,10 @@ class LostItemService {
       String? photoUrl;
       if (imageFile != null) {
         if (imageFile is File) {
+          print('Uploading image ...');
           photoUrl = await _uploadImage(imageFile);
         } else if (imageFile is Uint8List) {
+          print('Uploading image Bytes ...');
           photoUrl = await _uploadImageBytes(imageFile);
         } else {
           print('Unsupported image data type: ${imageFile.runtimeType}');
@@ -87,26 +91,28 @@ class LostItemService {
     }
   }
 
-
   /// Uploads an image to the Python backend and returns the blob name
   Future<String> _uploadImage(File imageFile) async {
     try {
       final uri = Uri.parse(_uploadImageUrl);
       final request = http.MultipartRequest('POST', uri);
+      print("the api key is $_uploadapiKey");
       request.headers['X-API-Key'] = _uploadapiKey;
 
       if (kIsWeb) {
+        print("k is web : ${kIsWeb}");
         // For web, read the file as bytes
         final bytes = await imageFile.readAsBytes();
         request.files.add(
           http.MultipartFile.fromBytes(
             'file',
             bytes,
-            contentType: MediaType('image','png'), // Adjust content type if needed
-           
+            contentType:
+                MediaType('image', 'png'), // Adjust content type if needed
           ),
         );
       } else {
+        print("k is web : ${kIsWeb}");
         // For mobile, use fromPath (dart:io is available)
         request.files.add(
           await http.MultipartFile.fromPath(
@@ -124,7 +130,8 @@ class LostItemService {
       if (response.statusCode == 200 && jsonResponse['status'] == 'success') {
         return jsonResponse['blob_name'];
       } else {
-        print('Error uploading image to backend: ${response.statusCode} - $responseBody');
+        print(
+            'Error uploading image to backend: ${response.statusCode} - $responseBody');
         throw Exception('Failed to upload image to backend');
       }
     } catch (e) {
@@ -133,7 +140,7 @@ class LostItemService {
     }
   }
 
-   Future<String> _uploadImageBytes(Uint8List imageBytes) async {
+  Future<String> _uploadImageBytes(Uint8List imageBytes) async {
     try {
       final uri = Uri.parse(_uploadImageUrl);
       final request = http.MultipartRequest('POST', uri);
@@ -143,7 +150,8 @@ class LostItemService {
           'file',
           imageBytes,
           filename: 'image_${DateTime.now().millisecondsSinceEpoch}.jpg',
-           contentType: MediaType('image','png'), // Adjust content type if needed
+          contentType:
+              MediaType('image', 'png'), // Adjust content type if needed
         ),
       );
 
@@ -154,7 +162,8 @@ class LostItemService {
       if (response.statusCode == 200 && jsonResponse['status'] == 'success') {
         return jsonResponse['blob_name'];
       } else {
-        print('Error uploading image bytes to backend: ${response.statusCode} - $responseBody');
+        print(
+            'Error uploading image bytes to backend: ${response.statusCode} - $responseBody');
         throw Exception('Failed to upload image bytes to backend');
       }
     } catch (e) {
