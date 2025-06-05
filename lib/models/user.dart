@@ -5,6 +5,7 @@ class User extends AccountHolder {
   final String phoneNumber;
   final List<String>? postIds; // Références aux posts
   final List<String>? chatIds; // Références aux chats
+  final String? profilePictureBlobName; // Add this line
 
   User({
     String? userId,
@@ -17,6 +18,7 @@ class User extends AccountHolder {
     required this.phoneNumber,
     this.postIds,
     this.chatIds,
+    this.profilePictureBlobName, 
   }) : super(
           userId: userId,
           name: name,
@@ -33,6 +35,7 @@ class User extends AccountHolder {
         'phoneNumber': phoneNumber,
         'postIds': postIds ?? [],
         'chatIds': chatIds ?? [],
+        'profilePictureBlobName': profilePictureBlobName, 
       };
 
   factory User.fromJson(Map<String, dynamic> json) => User(
@@ -46,6 +49,6 @@ class User extends AccountHolder {
         phoneNumber: json['phoneNumber'],
         postIds: List<String>.from(json['postIds'] ?? []),
         chatIds: List<String>.from(json['chatIds'] ?? []),
+        profilePictureBlobName: json['profilePictureBlobName'], 
       );
 }
-

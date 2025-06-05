@@ -2,13 +2,17 @@
 
 //hedha zeda juste tastit bih lfront
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:foundita/services/chat_service.dart';
 import '../models/conversation.dart';
 
 class ConversationProvider extends ChangeNotifier {
   List<Conversation> _conversations = [];
   bool _isLoading = false;
   String? _error;
+  final ChatService _chatService = ChatService();
+  String? _currentChatId;
 
   List<Conversation> get conversations => _conversations;
   bool get isLoading => _isLoading;
@@ -52,18 +56,6 @@ class ConversationProvider extends ChangeNotifier {
     notifyListeners();
     }
   }
-
-  Future<void> sendMessage({
-    required String conversationId,
-    required String senderId,
-    required String content,
-  }) async {
-    _isLoading = true;
-    notifyListeners();
-
-    try {
-      // Simulate API call
-      await Future.delayed(Duration(milliseconds: 500));
 
       // final conversation = _conversations.firstWhere(
       //       (c) => c.id == conversationId,
@@ -120,5 +112,17 @@ class ConversationProvider extends ChangeNotifier {
       return c;
     }).toList();
     notifyListeners();
+  }
+
+    Future<void> startChat(String user1Id, String user2Id) async {
+    _currentChatId = await _chatService.getOrCreateChat(user1Id, user2Id);
+    notifyListeners();
+  }
+
+
+
+  Stream<QuerySnapshot> get messages {
+    if (_currentChatId == null) return const Stream.empty();
+    return _chatService.getMessages(_currentChatId!);
   }
 }

@@ -69,7 +69,7 @@ class NotificationCard extends StatelessWidget {
               );
 
               // Navigate to chat screen
-              Navigator.push(
+              /* Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => ChatScreen(
@@ -77,7 +77,7 @@ class NotificationCard extends StatelessWidget {
                     notificationId: notification.id,
                   ),
                 ),
-              );
+              ); */
             } catch (e) {
               print('Error navigating to chat: $e');
             }
