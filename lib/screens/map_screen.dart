@@ -365,6 +365,18 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
                 ),
               ),
             ),
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.pushNamed(context, '/report-lost-test');
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Report Found Item'),
+              backgroundColor: Theme.of(context).primaryColor,
+            ),
+          ),
         ],
       ),
     );
