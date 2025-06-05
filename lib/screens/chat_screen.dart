@@ -1,35 +1,35 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/conversation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../providers/conversation_provider.dart';
 
-class ChatScreen extends StatelessWidget {
+class ChatScreen extends StatefulWidget {
   final String otherUserId;
 
   const ChatScreen({super.key, required this.otherUserId});
+
+  @override
+  State<ChatScreen> createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  final _messageController = TextEditingController();
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final currentUserId = FirebaseAuth.instance.currentUser!.uid;
     final provider = Provider.of<ConversationProvider>(context, listen: false);
 
-  @override
-  void dispose() {
-    _messageController.dispose();
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // final themeProvider = Provider.of<ThemeProvider>(context);
-    // final darkMode = themeProvider.isDarkMode;
-    final conversationProvider = Provider.of<ConversationProvider>(context);
     // Initialize chat on first load
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      provider.startChat(currentUserId, otherUserId);
+      provider.startChat(currentUserId, widget.otherUserId);
     });
 
     return Scaffold(
@@ -50,9 +50,8 @@ class ChatScreen extends StatelessWidget {
                     final msg = messages[index];
                     return ListTile(
                       title: Text(msg['content']),
-                      subtitle: Text(msg['senderId'] == currentUserId
-                          ? 'You'
-                          : 'Other'),
+                      subtitle: Text(
+                          msg['senderId'] == currentUserId ? 'You' : 'Other'),
                     );
                   },
                 );
@@ -65,16 +64,27 @@ class ChatScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: TextField(
-                    decoration: const InputDecoration(hintText: 'Type a message'),
+                    controller: _messageController,
+                    decoration:
+                        const InputDecoration(hintText: 'Type a message'),
                     onSubmitted: (text) {
-                      provider.sendMessage(text, currentUserId);
+                      if (text.trim().isNotEmpty) {
+                        provider.sendMessage(
+                            provider.currentChatId ?? '', currentUserId, text);
+                        _messageController.clear();
+                      }
                     },
                   ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.send),
                   onPressed: () {
-                    // Implement send from controller
+                    final text = _messageController.text.trim();
+                    if (text.isNotEmpty) {
+                      provider.sendMessage(
+                          provider.currentChatId ?? '', currentUserId, text);
+                      _messageController.clear();
+                    }
                   },
                 ),
               ],

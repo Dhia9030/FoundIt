@@ -1,5 +1,3 @@
-
-
 //hedha zeda juste tastit bih lfront
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -13,10 +11,10 @@ class ConversationProvider extends ChangeNotifier {
   String? _error;
   final ChatService _chatService = ChatService();
   String? _currentChatId;
-
   List<Conversation> get conversations => _conversations;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  String? get currentChatId => _currentChatId;
 
   Future<void> fetchConversations(String userId) async {
     _isLoading = true;
@@ -28,40 +26,40 @@ class ConversationProvider extends ChangeNotifier {
 
       // Mock data - in real app, this would come from backend
       _conversations = [
-    Conversation(
-    id: '1',
-    notificationId: '1',
-    participant1Id: 'user1',
-    participant2Id: 'user2',
-    itemId: '1',
-    messages: [
-    Message(
-    id: '1',
-    senderId: 'user1',
-    content: 'Hello, I think I found your wallet!',
-    timestamp: DateTime.now().subtract(Duration(minutes: 30)),
+        Conversation(
+          id: '1',
+          notificationId: '1',
+          participant1Id: 'user1',
+          participant2Id: 'user2',
+          itemId: '1',
+          messages: [
+            Message(
+              id: '1',
+              senderId: 'user1',
+              content: 'Hello, I think I found your wallet!',
+              timestamp: DateTime.now().subtract(Duration(minutes: 30)),
+            )
+          ],
+          createdAt: DateTime.now().subtract(Duration(days: 1)),
+          updatedAt: DateTime.now(),
+        ),
+      ];
 
-
-    )],
-    createdAt: DateTime.now().subtract(Duration(days: 1)),
-    updatedAt: DateTime.now(),
-    ),
-    ];
-
-    _isLoading = false;
-    notifyListeners();
+      _isLoading = false;
+      notifyListeners();
     } catch (e) {
-    _error = e.toString();
-    _isLoading = false;
-    notifyListeners();
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
-      // final conversation = _conversations.firstWhere(
-      //       (c) => c.id == conversationId,
-      //   orElse: () => throw Exception('Conversation not found'),
-      // );
+  Future<void> sendMessage(
+      String conversationId, String senderId, String content) async {
+    _isLoading = true;
+    notifyListeners();
 
+    try {
       final newMessage = Message(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         senderId: senderId,
@@ -94,7 +92,6 @@ class ConversationProvider extends ChangeNotifier {
     }
   }
 
-  // This will be used when WebSocket is implemented
   void handleIncomingMessage(Message message, String conversationId) {
     _conversations = _conversations.map((c) {
       if (c.id == conversationId) {
@@ -114,12 +111,10 @@ class ConversationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-    Future<void> startChat(String user1Id, String user2Id) async {
+  Future<void> startChat(String user1Id, String user2Id) async {
     _currentChatId = await _chatService.getOrCreateChat(user1Id, user2Id);
     notifyListeners();
   }
-
-
 
   Stream<QuerySnapshot> get messages {
     if (_currentChatId == null) return const Stream.empty();

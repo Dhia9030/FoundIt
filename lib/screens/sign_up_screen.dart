@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:foundita/providers/login_provider.dart';
+import 'package:foundita/providers/registerprovider.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -14,17 +14,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   final _nameController = TextEditingController();
   String? _successMessage;
-
   Future<void> _registerWithEmail(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
 
-    final loginProvider = Provider.of<LoginProvider>(context, listen: false);
+    final registerProvider =
+        Provider.of<RegisterProvider>(context, listen: false);
 
     try {
-      await loginProvider.registerWithEmailAndPassword(
+      await registerProvider.registerWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
         name: _nameController.text.trim(),
+        phoneNumber: '', // Add phone number field if needed
       );
 
       setState(() {
@@ -34,7 +35,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       Future.delayed(Duration(seconds: 2), () {
         Navigator.pushReplacementNamed(context, '/home');
       });
-
     } catch (e) {
       // Errors handled by provider
     }
@@ -60,20 +60,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       style: TextStyle(color: Colors.green, fontSize: 16),
                     ),
                   ),
-
-                Consumer<LoginProvider>(
-                  builder: (context, loginProvider, _) {
+                Consumer<RegisterProvider>(
+                  builder: (context, registerProvider, _) {
                     return Column(
                       children: [
-                        if (loginProvider.error != null)
+                        if (registerProvider.error != null)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 16.0),
                             child: Text(
-                              loginProvider.error!,
+                              registerProvider.error!,
                               style: TextStyle(color: Colors.red, fontSize: 16),
                             ),
                           ),
-
                         TextFormField(
                           controller: _nameController,
                           decoration: InputDecoration(
@@ -87,9 +85,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             return null;
                           },
                         ),
-
                         SizedBox(height: 20),
-
                         TextFormField(
                           controller: _emailController,
                           decoration: InputDecoration(
@@ -101,15 +97,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             if (value == null || value.isEmpty) {
                               return 'Veuillez entrer votre email';
                             }
-                            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                                .hasMatch(value)) {
                               return 'Email invalide';
                             }
                             return null;
                           },
                         ),
-
                         SizedBox(height: 20),
-
                         TextFormField(
                           controller: _passwordController,
                           decoration: InputDecoration(
@@ -127,9 +122,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             return null;
                           },
                         ),
-
                         SizedBox(height: 20),
-
                         TextFormField(
                           controller: _confirmPasswordController,
                           decoration: InputDecoration(
@@ -144,10 +137,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             return null;
                           },
                         ),
-
                         SizedBox(height: 30),
-
-                        if (loginProvider.isLoading)
+                        if (registerProvider.isLoading)
                           CircularProgressIndicator()
                         else
                           SizedBox(
@@ -163,9 +154,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                             ),
                           ),
-
                         SizedBox(height: 20),
-
                         TextButton(
                           onPressed: () {
                             Navigator.pushNamed(context, '/login');

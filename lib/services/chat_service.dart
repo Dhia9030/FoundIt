@@ -54,4 +54,17 @@ Future<String> getOrCreateChat(String user1Id, String user2Id) async {
       .orderBy('timestamp', descending: false)
       .snapshots();
   }
+
+  Future<QuerySnapshot> getConversations(String userId) async {
+    try {
+      // Get all chats where the user is a participant
+      return await _firestore.collection('chats')
+        .where('participantIds', arrayContains: userId)
+        .orderBy('lastMessageTime', descending: true)
+        .get();
+    } catch (e) {
+      print('Error fetching conversations: $e');
+      rethrow;
+    }
+  }
 }

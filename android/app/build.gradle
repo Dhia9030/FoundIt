@@ -15,34 +15,28 @@ dependencies {
 }
 
 android {
-    compileSdkVersion 34
-
     namespace = "com.example.foundita"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17 // 👈 Not Java 21
+        sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-
+    
     kotlinOptions {
-        jvmTarget = '17' // For Kotlin projects
+        jvmTarget = '17'
     }
-
+    
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.foundita"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdkVersion 34
-        minSdkVersion 23
-        minSdk 21
+        minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-
     }
 
     buildTypes {

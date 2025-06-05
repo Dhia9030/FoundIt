@@ -147,13 +147,12 @@ class MyApp extends StatelessWidget {
         '/notifications': (context) => const HomePage(initialTabIndex: 2),
         '/profile': (context) => const ProfileScreen(), // Add ProfileScreen route
         '/report-lost': (context) => const DescribeItemScreen(),
-        '/report-found': (context) => const ReportFoundItemForm(),
+        '/report-found': (context) => ReportFoundItemScreen(),
         '/register': (context) => RegistrationScreen(),
         '/login': (context) => const LoginScreen(),
         '/report-lost-test': (context) => const ReportLostItemScreen(),
         '/user-management': (context) => const UserManagementScreen(),
         '/map-picker': (context) => const MapPickerScreen(),
-        '/report-found': (context) => ReportFoundItemScreen(),
         '/map': (context) => const FoundItemsMapPage(),
         '/dashboard': (context) => const DashboardScreen(),
          '/chat': (context) {

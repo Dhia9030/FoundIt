@@ -22,7 +22,8 @@ class LoginProvider with ChangeNotifier {
   Future<void> loginWithEmailAndPassword({
     required String email,
     required String password,
-  }) async {
+  }) async
+  {
     try {
       _setLoading(true);
       _currentAccountHolder = await _loginService.loginWithEmailAndPassword(
