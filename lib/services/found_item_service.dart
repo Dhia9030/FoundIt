@@ -43,14 +43,14 @@ class FoundItemService {
     required double longitude,
     required DateTime foundDate,
     required String userId,
-  }) async
-  {
+  }) async {
     try {
       String? photoUrl;
 
       if (imageData != null) {
         if (imageData is File) {
           photoUrl = await _uploadImage(imageData);
+          print("Image uploaded successfully: $photoUrl");
         } else if (imageData is Uint8List) {
           photoUrl = await _uploadImageBytes(imageData);
         } else {
@@ -113,16 +113,26 @@ class FoundItemService {
           http.MultipartFile.fromBytes(
             'file',
             bytes,
-            contentType: MediaType('image','png'), // Adjust content type if needed
-           
+            contentType:
+                MediaType('image', 'png'), // Adjust content type if needed
           ),
         );
       } else {
         // For mobile, use fromPath (dart:io is available)
+        final extension = path.extension(imageFile.path).toLowerCase();
+        String mimeType = 'application/octet-stream'; // default fallback
+
+        if (extension == '.png')
+          mimeType = 'image/png';
+        else if (extension == '.jpg' || extension == '.jpeg')
+          mimeType = 'image/jpeg';
+        else if (extension == '.gif') mimeType = 'image/gif';
+
         request.files.add(
           await http.MultipartFile.fromPath(
             'file',
             imageFile.path,
+            contentType: MediaType.parse(mimeType),
             filename: path.basename(imageFile.path),
           ),
         );
@@ -135,7 +145,8 @@ class FoundItemService {
       if (response.statusCode == 200 && jsonResponse['status'] == 'success') {
         return jsonResponse['blob_name'];
       } else {
-        print('Error uploading image to backend: ${response.statusCode} - $responseBody');
+        print(
+            'Error uploading image to backend: ${response.statusCode} - $responseBody');
         throw Exception('Failed to upload image to backend');
       }
     } catch (e) {
@@ -144,8 +155,7 @@ class FoundItemService {
     }
   }
 
-
- Future<String> _uploadImageBytes(Uint8List imageBytes) async {
+  Future<String> _uploadImageBytes(Uint8List imageBytes) async {
     try {
       final uri = Uri.parse(_uploadImageUrl);
       final request = http.MultipartRequest('POST', uri);
@@ -155,7 +165,8 @@ class FoundItemService {
           'file',
           imageBytes,
           filename: 'image_${DateTime.now().millisecondsSinceEpoch}.jpg',
-           contentType: MediaType('image','png'), // Adjust content type if needed
+          contentType:
+              MediaType('image', 'png'), // Adjust content type if needed
         ),
       );
 
@@ -166,7 +177,8 @@ class FoundItemService {
       if (response.statusCode == 200 && jsonResponse['status'] == 'success') {
         return jsonResponse['blob_name'];
       } else {
-        print('Error uploading image bytes to backend: ${response.statusCode} - $responseBody');
+        print(
+            'Error uploading image bytes to backend: ${response.statusCode} - $responseBody');
         throw Exception('Failed to upload image bytes to backend');
       }
     } catch (e) {
@@ -174,23 +186,27 @@ class FoundItemService {
       rethrow;
     }
   }
+
   Future<List<FoundItem>> getAllFoundItems() async {
     try {
       final snapshot = await _foundItemsCollection.get();
-      return snapshot.docs.map((doc) => FoundItem.fromJson(doc.data() as Map<String, dynamic>)).toList();
-      
+      return snapshot.docs
+          .map((doc) => FoundItem.fromJson(doc.data() as Map<String, dynamic>))
+          .toList();
     } catch (e) {
       print('❌ Error fetching all found items: $e');
       rethrow;
     }
   }
-  
-  Future<List<FoundItemPopulated>> getAllPopulatedFoundItems() async
-  {
+
+  Future<List<FoundItemPopulated>> getAllPopulatedFoundItems() async {
     try {
       final snapshot = await _foundItemsCollection.get();
-      final items_list = snapshot.docs.map((doc) => FoundItem.fromJson(doc.data() as Map<String, dynamic>)).toList();
-      final List<FoundItemPopulated> items_populated = await Future.wait(items_list.map((item) => item.convertTo()));
+      final items_list = snapshot.docs
+          .map((doc) => FoundItem.fromJson(doc.data() as Map<String, dynamic>))
+          .toList();
+      final List<FoundItemPopulated> items_populated =
+          await Future.wait(items_list.map((item) => item.convertTo()));
       return items_populated;
     } catch (e) {
       print('❌ Error fetching all found items: $e');
@@ -198,10 +214,12 @@ class FoundItemService {
     }
   }
 
-  Future<List<FoundItemPopulated>> getPopulatedItemsByLocation(String targetLocationId) async {
+  Future<List<FoundItemPopulated>> getPopulatedItemsByLocation(
+      String targetLocationId) async {
     try {
       // 1. Get the target location first
-      final targetLocation = await _locationService.getLocationById(targetLocationId);
+      final targetLocation =
+          await _locationService.getLocationById(targetLocationId);
       if (targetLocation == null) {
         throw Exception('Target location not found');
       }
@@ -211,12 +229,12 @@ class FoundItemService {
 
       // 2. Get all items safely
       final itemsSnapshot = await _foundItemsCollection.get();
-      final itemLocationIds = await getAllFoundItems().then((items) => items.map((item) => item.locationId).toSet());
+      final itemLocationIds = await getAllFoundItems()
+          .then((items) => items.map((item) => item.locationId).toSet());
 
       // 4. Get all related locations in one batch
       final locations = await Future.wait(
-          itemLocationIds.map((id) => _locationService.getLocationById(id!))
-      );
+          itemLocationIds.map((id) => _locationService.getLocationById(id!)));
 
       // 5. Create location map for quick lookup
       final locationMap = {
@@ -243,12 +261,11 @@ class FoundItemService {
       }).toList();
 
       // 7. Convert to populated items
-      final List<FoundItemPopulated> populatedItems = await Future.wait(
-          filteredItems.map((doc) async {
-            final item = FoundItem.fromJson(doc.data() as Map<String, dynamic>);
-            return item.convertTo();
-          })
-      );
+      final List<FoundItemPopulated> populatedItems =
+          await Future.wait(filteredItems.map((doc) async {
+        final item = FoundItem.fromJson(doc.data() as Map<String, dynamic>);
+        return item.convertTo();
+      }));
 
       return populatedItems;
     } catch (e) {
@@ -265,15 +282,15 @@ class FoundItemService {
       }
       final imageUrl = '$_storageUrl/download/$blobName';
 
-      final response = await http.get(
-        Uri.parse(imageUrl),
-        headers: {'X-API-Key': _storageApiKey});
+      final response = await http
+          .get(Uri.parse(imageUrl), headers: {'X-API-Key': _storageApiKey});
 
       if (response.statusCode == 200) {
         print('image fetched with response : ${response.bodyBytes}');
         return response.bodyBytes;
       } else {
-        print('❌ Error fetching image: ${response.statusCode} - ${response.reasonPhrase}');
+        print(
+            '❌ Error fetching image: ${response.statusCode} - ${response.reasonPhrase}');
         return Uint8List(0);
       }
     } catch (e) {

@@ -382,7 +382,7 @@ class _FoundItemsMapPageState extends State<FoundItemsMapPage> {
                   right: 20,
                   child: FloatingActionButton.extended(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/report-lost');
+                      Navigator.pushNamed(context, '/report-found');
                     },
                     icon: const Icon(Icons.add),
                     label: const Text('Report Found Item'),
