@@ -46,6 +46,20 @@ class LostItemService {
         latitude: latitude,
         longitude: longitude,
       );
+      // 3. Create a new LostItem
+      final ItemWithoutPhoto = LostItem(
+        userId: userId,
+        itemId: '', // Will be set by Firestore
+        itemName: itemName,
+        type: type,
+        description: description,
+        color: color,
+        date: date,
+        photo: '', // Will be set after image upload'',
+        isFound: false,
+        locationId: locationId,
+        lostDate: lostDate,
+      );
 
       // 2. Upload image if provided
       String? photoUrl;
@@ -54,14 +68,11 @@ class LostItemService {
           print('Uploading image ...');
           photoUrl = await _uploadImage(imageFile);
         } else if (imageFile is Uint8List) {
-          print('Uploading image Bytes ...');
-          photoUrl = await _uploadImageBytes(imageFile);
+          photoUrl = await _uploadImageBytes(imageFile, ItemWithoutPhoto);
         } else {
           print('Unsupported image data type: ${imageFile.runtimeType}');
         }
       }
-
-      // 3. Create a new LostItem
       final newItem = LostItem(
         userId: userId,
         itemId: '', // Will be set by Firestore
@@ -128,7 +139,7 @@ class LostItemService {
       final jsonResponse = jsonDecode(responseBody);
 
       if (response.statusCode == 200 && jsonResponse['status'] == 'success') {
-        return jsonResponse['blob_name'];
+        return jsonResponse['image_url'] ?? '';
       } else {
         print(
             'Error uploading image to backend: ${response.statusCode} - $responseBody');
@@ -140,11 +151,23 @@ class LostItemService {
     }
   }
 
-  Future<String> _uploadImageBytes(Uint8List imageBytes) async {
+  Future<String> _uploadImageBytes(
+    Uint8List imageBytes,
+    LostItem lostItem,
+  ) async {
     try {
       final uri = Uri.parse(_uploadImageUrl);
       final request = http.MultipartRequest('POST', uri);
       request.headers['X-API-Key'] = _uploadapiKey;
+
+      // Extract fields from LostItem
+      request.fields['user_id'] = lostItem.userId;
+      request.fields['post_id'] = lostItem.itemId;
+      request.fields['post_type'] = lostItem.type.toString();
+      request.fields['description'] = lostItem.description;
+      request.fields['item_category'] =
+          lostItem.type.toString(); // Adjust if needed
+
       request.files.add(
         http.MultipartFile.fromBytes(
           'file',
@@ -159,8 +182,8 @@ class LostItemService {
       final responseBody = await response.stream.bytesToString();
       final jsonResponse = jsonDecode(responseBody);
 
-      if (response.statusCode == 200 && jsonResponse['status'] == 'success') {
-        return jsonResponse['blob_name'];
+      if (response.statusCode == 200) {
+        return jsonResponse['image_url'] ?? '';
       } else {
         print(
             'Error uploading image bytes to backend: ${response.statusCode} - $responseBody');
