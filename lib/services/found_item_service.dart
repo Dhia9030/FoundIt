@@ -35,26 +35,14 @@ class FoundItemService {
     required String description,
     required String color,
     required DateTime date,
-    required dynamic imageData,
+    required dynamic imageData, // File or Uint8List
     required double latitude,
     required double longitude,
     required DateTime foundDate,
     required String userId,
   }) async {
     try {
-      String? photoUrl;
-
-      if (imageData != null) {
-        if (imageData is File) {
-          photoUrl = await _uploadImage(imageData);
-        } else if (imageData is Uint8List) {
-          photoUrl = await _uploadImageBytes(imageData);
-        } else {
-          print("Unsupported image data type: ${imageData.runtimeType}");
-          photoUrl = null;
-        }
-      }
-
+      // 1. Create or get location
       String locationId;
       Location? location =
           await _locationService.getLocationByCoordinates(latitude, longitude);
@@ -67,28 +55,49 @@ class FoundItemService {
         );
       }
 
-      final newItem = FoundItem(
+      // 2. Generate a new document reference to get the itemId
+      final docRef = _foundItemsCollection.doc();
+      final itemId = docRef.id;
+
+      // 3. Create FoundItem with the generated itemId
+      final itemWithoutPhoto = FoundItem(
         userId: userId,
-        itemId: '',
+        itemId: itemId,
         itemName: itemName,
         type: type,
         description: description,
         color: color,
         date: date,
-        photo: photoUrl ?? '',
+        photo: '',
         locationId: locationId,
         foundDate: foundDate,
         isFound: true,
       );
 
-      final docRef = await _foundItemsCollection.add(newItem.toJson());
+      // 4. Upload image if provided
+      String? photoUrl;
+      if (imageData != null) {
+        if (imageData is File) {
+          photoUrl = await _uploadImage(imageData);
+        } else if (imageData is Uint8List) {
+          photoUrl = await _uploadImageBytes(imageData, itemWithoutPhoto);
+        } else {
+          print("Unsupported image data type: ${imageData.runtimeType}");
+          photoUrl = null;
+        }
+      }
 
-      await docRef.update({'itemId': docRef.id});
+      // 5. Create the final FoundItem with photoUrl
+      final newItem = itemWithoutPhoto.copyWith(photo: photoUrl ?? '');
 
-      await _locationService.addItemToLocation(locationId, docRef.id);
+      // 6. Add to Firestore using the generated docRef
+      await docRef.set(newItem.toJson());
 
-      print('✅ Item reported successfully with ID: ${docRef.id}');
-      return docRef.id;
+      // 7. Add the item ID to the location
+      await _locationService.addItemToLocation(locationId, itemId);
+
+      print('✅ Item reported successfully with ID: $itemId');
+      return itemId;
     } catch (e) {
       print('❌ Error reporting found item to Firestore/Storage: $e');
       rethrow;
@@ -109,8 +118,7 @@ class FoundItemService {
           http.MultipartFile.fromBytes(
             'file',
             bytes,
-            contentType: MediaType('image','png'), // Adjust content type if needed
-           
+            contentType: MediaType('image','png'),
           ),
         );
       } else {
@@ -140,18 +148,28 @@ class FoundItemService {
     }
   }
 
-
- Future<String> _uploadImageBytes(Uint8List imageBytes) async {
+  Future<String> _uploadImageBytes(
+    Uint8List imageBytes,
+    FoundItem foundItem,
+  ) async {
     try {
       final uri = Uri.parse(_uploadImageUrl);
       final request = http.MultipartRequest('POST', uri);
       request.headers['X-API-Key'] = _uploadapiKey;
+
+      // Add fields from FoundItem if needed
+      request.fields['user_id'] = foundItem.userId;
+      request.fields['post_id'] = foundItem.itemId;
+      request.fields['post_type'] = 'founditem';
+      request.fields['description'] = foundItem.description;
+      request.fields['item_category'] = foundItem.type.toString();
+
       request.files.add(
         http.MultipartFile.fromBytes(
           'file',
           imageBytes,
           filename: 'image_${DateTime.now().millisecondsSinceEpoch}.jpg',
-           contentType: MediaType('image','png'), // Adjust content type if needed
+          contentType: MediaType('image','png'),
         ),
       );
 
@@ -159,8 +177,8 @@ class FoundItemService {
       final responseBody = await response.stream.bytesToString();
       final jsonResponse = jsonDecode(responseBody);
 
-      if (response.statusCode == 200 && jsonResponse['status'] == 'success') {
-        return jsonResponse['blob_name'];
+      if (response.statusCode == 200) {
+        return jsonResponse['image_url']?? '';;
       } else {
         print('Error uploading image bytes to backend: ${response.statusCode} - $responseBody');
         throw Exception('Failed to upload image bytes to backend');
@@ -170,6 +188,7 @@ class FoundItemService {
       rethrow;
     }
   }
+
   Future<List<FoundItem>> getAllFoundItems() async {
     try {
       final snapshot = await _foundItemsCollection.get();

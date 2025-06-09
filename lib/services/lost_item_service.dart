@@ -5,11 +5,11 @@ import 'dart:io';
 import 'package:foundita/models/item.dart' as foundita_item;
 import 'package:foundita/models/lost_item.dart';
 import 'package:foundita/services/location_service.dart';
-import 'package:http/http.dart' as http; // Import the http package
-import 'package:path/path.dart' as path; // For getting filename
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as path;
 import 'package:flutter/foundation.dart' hide Category;
-import 'package:http_parser/http_parser.dart'; // For MediaType
-import 'dart:typed_data'; // For Uint8List
+import 'package:http_parser/http_parser.dart';
+import 'dart:typed_data';
 
 class LostItemService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -32,7 +32,7 @@ class LostItemService {
     required String description,
     required String color,
     required DateTime date,
-    required dynamic imageFile, // Changed to dynamic
+    required dynamic imageFile, // File or Uint8List
     required double latitude,
     required double longitude,
     required DateTime lostDate,
@@ -44,53 +44,46 @@ class LostItemService {
         latitude: latitude,
         longitude: longitude,
       );
- // 3. Create a new LostItem
-      final ItemWithoutPhoto = LostItem(
+
+      // 2. Generate a new document reference to get the itemId
+      final docRef = _lostItemsCollection.doc();
+      final itemId = docRef.id;
+
+      // 3. Create LostItem with the generated itemId
+      final itemWithoutPhoto = LostItem(
         userId: userId,
-        itemId: '', // Will be set by Firestore
+        itemId: itemId,
         itemName: itemName,
         type: type,
         description: description,
         color: color,
         date: date,
-        photo: '', // Will be set after image upload'',
+        photo: '',
         isFound: false,
         locationId: locationId,
         lostDate: lostDate,
       );
 
-      // 2. Upload image if provided
+      // 4. Upload image if provided
       String? photoUrl;
       if (imageFile != null) {
         if (imageFile is File) {
           photoUrl = await _uploadImage(imageFile);
         } else if (imageFile is Uint8List) {
-          photoUrl  = await _uploadImageBytes(imageFile,ItemWithoutPhoto);
+          photoUrl = await _uploadImageBytes(imageFile, itemWithoutPhoto);
         } else {
           print('Unsupported image data type: ${imageFile.runtimeType}');
         }
       }
-         final newItem = LostItem(
-        userId: userId,
-        itemId: '', // Will be set by Firestore
-        itemName: itemName,
-        type: type,
-        description: description,
-        color: color,
-        date: date,
-        photo: photoUrl ?? '',
-        locationId: locationId,
-        lostDate: lostDate,
-      );
-      
-      // 4. Add to Firestore and get document reference
-      final docRef = await _lostItemsCollection.add(newItem.toJson());
 
-      // 5. Update the item with the generated ID
-      await docRef.update({'itemId': docRef.id});
+      // 5. Create the final LostItem with photoUrl
+      final newItem = itemWithoutPhoto.copyWith(photo: photoUrl ?? '');
 
-      // 6. Add the item ID to the location
-      await _locationService.addItemToLocation(locationId, docRef.id);
+      // 6. Add to Firestore using the generated docRef
+      await docRef.set(newItem.toJson());
+
+      // 7. Add the item ID to the location
+      await _locationService.addItemToLocation(locationId, itemId);
 
       return docRef.id;
     } catch (e) {
@@ -98,7 +91,6 @@ class LostItemService {
       rethrow;
     }
   }
-
 
   /// Uploads an image to the Python backend and returns the blob name
   Future<String> _uploadImage(File imageFile) async {
@@ -108,18 +100,15 @@ class LostItemService {
       request.headers['X-API-Key'] = _uploadapiKey;
 
       if (kIsWeb) {
-        // For web, read the file as bytes
         final bytes = await imageFile.readAsBytes();
         request.files.add(
           http.MultipartFile.fromBytes(
             'file',
             bytes,
-            contentType: MediaType('image','png'), // Adjust content type if needed
-           
+            contentType: MediaType('image', 'png'),
           ),
         );
       } else {
-        // For mobile, use fromPath (dart:io is available)
         request.files.add(
           await http.MultipartFile.fromPath(
             'file',
@@ -144,46 +133,47 @@ class LostItemService {
       rethrow;
     }
   }
-Future<String> _uploadImageBytes(
-  Uint8List imageBytes,
-  LostItem lostItem,
-) async {
-  try {
-    final uri = Uri.parse(_uploadImageUrl);
-    final request = http.MultipartRequest('POST', uri);
-    request.headers['X-API-Key'] = _uploadapiKey ;
 
-    // Extract fields from LostItem
-    request.fields['user_id'] = lostItem.userId;
-    request.fields['post_id'] = lostItem.itemId;
-    request.fields['post_type'] = lostItem.type.toString();
-    request.fields['description'] = lostItem.description;
-    request.fields['item_category'] = lostItem.type.toString(); // Adjust if needed
-    
-    request.files.add(
-      http.MultipartFile.fromBytes(
-        'file',
-        imageBytes,
-        filename: 'image_${DateTime.now().millisecondsSinceEpoch}.jpg',
-        contentType: MediaType('image', 'png'), // Adjust content type if needed
-      ),
-    );
+  Future<String> _uploadImageBytes(
+    Uint8List imageBytes,
+    LostItem lostItem,
+  ) async {
+    try {
+      final uri = Uri.parse(_uploadImageUrl);
+      final request = http.MultipartRequest('POST', uri);
+      request.headers['X-API-Key'] = _uploadapiKey;
 
-    final response = await request.send();
-    final responseBody = await response.stream.bytesToString();
-    final jsonResponse = jsonDecode(responseBody);
+      // Extract fields from LostItem
+      request.fields['user_id'] = lostItem.userId;
+      request.fields['post_id'] = lostItem.itemId;
+      request.fields['post_type'] = 'lostitem ';
+      request.fields['description'] = lostItem.description;
+      request.fields['item_category'] = lostItem.type.toString();
 
-    if (response.statusCode == 200 ) {
-      return jsonResponse['image_url'] ?? '';
-    } else {
-      print('Error uploading image bytes to backend: ${response.statusCode} - $responseBody');
-      throw Exception('Failed to upload image bytes to backend');
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'file',
+          imageBytes,
+          filename: 'image_${DateTime.now().millisecondsSinceEpoch}.jpg',
+          contentType: MediaType('image', 'png'),
+        ),
+      );
+
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+      final jsonResponse = jsonDecode(responseBody);
+
+      if (response.statusCode == 200) {
+        return jsonResponse['image_url'] ?? '';
+      } else {
+        print('Error uploading image bytes to backend: ${response.statusCode} - $responseBody');
+        throw Exception('Failed to upload image bytes to backend');
+      }
+    } catch (e) {
+      print('❌ Error uploading image bytes: $e');
+      rethrow;
     }
-  } catch (e) {
-    print('❌ Error uploading image bytes: $e');
-    rethrow;
   }
-}
 
   /// Gets a stream of all lost items
   Stream<List<LostItem>> getLostItems() {
